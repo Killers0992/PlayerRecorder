@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerRecorder", "PlayerRecorder\PlayerRecorder.csproj", "{AFCDF0A6-DBA7-40B8-BFFE-30C082D11F3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AFCDF0A6-DBA7-40B8-BFFE-30C082D11F3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFCDF0A6-DBA7-40B8-BFFE-30C082D11F3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFCDF0A6-DBA7-40B8-BFFE-30C082D11F3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFCDF0A6-DBA7-40B8-BFFE-30C082D11F3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {53F556A8-5AA7-4ACA-9D0C-DE656CA42FC3}
+	EndGlobalSection
+EndGlobal
