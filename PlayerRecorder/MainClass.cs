@@ -25,6 +25,7 @@ namespace PlayerRecorder
             singleton = this;
             core = new RecorderCore();
             eventHandlers = new EventHandlers(core);
+            core.handler = eventHandlers;
             HarmonyLib.Harmony hrm = new HarmonyLib.Harmony("Patcher.recorder");
             hrm.PatchAll();
             base.OnEnabled();

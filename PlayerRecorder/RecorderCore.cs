@@ -1,6 +1,4 @@
 ﻿using Exiled.API.Features;
-using Ionic.Zip;
-using LiteDB;
 using MEC;
 using Mirror;
 using Mirror.LiteNetLib4Mirror;
@@ -37,12 +35,12 @@ namespace PlayerRecorder
         public Dictionary<Pickup, int> itemsData = new Dictionary<Pickup, int>();
         public List<string> playerData = new List<string>();
         public Dictionary<string, GameObject> playerDb = new Dictionary<string, GameObject>();
-
+        public EventHandlers handler;
         public RecorderCore()
         {
             singleton = this;
-            Timing.RunCoroutine(Replay());
             Timing.RunCoroutine(Recorder());
+            Timing.RunCoroutine(Framer());
         }
 
         public void CreateFakePlayer(int clientid, string name, string userId, RoleType RoleType)
@@ -57,7 +55,8 @@ namespace PlayerRecorder
                     return;
                 ccm.CurClass = RoleType;
                 obj.GetComponent<NicknameSync>().Network_myNickSync = string.IsNullOrEmpty(name) ? "[REC] Unknown name" :  $"[REC] {name}";
-                obj.GetComponent<QueryProcessor>().NetworkPlayerId = clientid;
+                obj.GetComponent<QueryProcessor>().NetworkPlayerId = QueryProcessor._idIterator++;
+                idDB.Add(clientid, obj.GetComponent<QueryProcessor>().NetworkPlayerId);
                 obj.GetComponent<QueryProcessor>()._ipAddress = "127.0.0.WAN";
                 obj.transform.position = new Vector3(0f, 0f, 0f);
                 NetworkServer.Spawn(obj);
@@ -69,263 +68,279 @@ namespace PlayerRecorder
                 if (!playerDb.ContainsKey(userId))
                     playerDb.Add(userId, obj);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Error(ex.ToString());
             }
         }
+        public Dictionary<int, int> idDB = new Dictionary<int, int>();
         public Queue<object> dataQueue = new Queue<object>();
         public bool endInstance = false;
 
+        public IEnumerator<float> Framer()
+        {
+            while (true)
+            {
+                if (recorderRunning && PlayerManager.players.Count != 0)
+                {
+                    dataQueue.Enqueue(new WaitFrameData());
+                }
+                yield return Timing.WaitForOneFrame;
+            }
+        }
+
         public IEnumerator<float> RecorderInstance()
         {
+            dataQueue.Enqueue(new SeedData()
+            {
+                Seed = ReferenceHub.HostHub.gameObject.GetComponent<RandomSeedSync>().Networkseed
+            });
             using (var stream = new FileStream(Path.Combine("RecorderData", $"{Server.Port}", $"Record_{DateTime.Now.Ticks}.rd"), FileMode.CreateNew))
             {
                 while (!endInstance)
                 {
-                    try
+                    if (dataQueue.Count == 0)
                     {
-                        if (dataQueue.Count != 0)
-                        {
-                            for (int p = 0; p < dataQueue.Count; p++)
-                            {
-                                var ev = dataQueue.Dequeue();
-                                if (ev is PlayerInfoData data)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<PlayerInfoData>(stream, data);
-                                }
-                                else if (ev is LeaveData data1)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<LeaveData>(stream, data1);
-                                }
-                                else if (ev is UpdateRoleData data2)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<UpdateRoleData>(stream, data2);
-                                }
-                                else if (ev is DoorData data3)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<DoorData>(stream, data3);
-                                }
-                                else if (ev is LiftData data4)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<LiftData>(stream, data4);
-                                }
-                                else if (ev is CreatePickupData data5)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<CreatePickupData>(stream, data5);
-                                }
-                                else if (ev is ReloadWeaponData data6)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<ReloadWeaponData>(stream, data6);
-                                }
-                                else if (ev is ShotWeaponData data7)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<ShotWeaponData>(stream, data7);
-                                }
-                                else if (ev is RemovePickupData data8)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<RemovePickupData>(stream, data8);
-                                }
-                                else if (ev is RoundEndData data9)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<RoundEndData>(stream, data9);
-                                }
-                                else if (ev is SeedData data10)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<SeedData>(stream, data10);
-                                }
-                                else if (ev is UpdatePickupData data11)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<UpdatePickupData>(stream, data11);
-                                }
-                                else if (ev is UpdatePlayerData data12)
-                                {
-                                    MessagePack.MessagePackSerializer.Serialize<UpdatePlayerData>(stream, data12);
-                                }
-                            }
-                        }
-                        if (Round.IsStarted)
-                            MessagePack.MessagePackSerializer.Serialize<WaitFrameData>(stream, new WaitFrameData());
-                        stream.Flush();
-                    }catch(Exception ex)
-                    {
-                        Log.Info(ex.ToString());
+                        yield return Timing.WaitForOneFrame;
                     }
-                    yield return Timing.WaitForOneFrame;
-
+                    else
+                    {
+                        var ev = dataQueue.Dequeue();
+                        if (ev is PlayerInfoData data)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<PlayerInfoData>(stream, data);
+                        }
+                        else if (ev is LeaveData data1)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<LeaveData>(stream, data1);
+                        }
+                        else if (ev is UpdateRoleData data2)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<UpdateRoleData>(stream, data2);
+                        }
+                        else if (ev is DoorData data3)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<DoorData>(stream, data3);
+                        }
+                        else if (ev is LiftData data4)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<LiftData>(stream, data4);
+                        }
+                        else if (ev is CreatePickupData data5)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<CreatePickupData>(stream, data5);
+                        }
+                        else if (ev is ReloadWeaponData data6)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<ReloadWeaponData>(stream, data6);
+                        }
+                        else if (ev is ShotWeaponData data7)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<ShotWeaponData>(stream, data7);
+                        }
+                        else if (ev is RemovePickupData data8)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<RemovePickupData>(stream, data8);
+                        }
+                        else if (ev is RoundEndData data9)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<RoundEndData>(stream, data9);
+                        }
+                        else if (ev is SeedData data10)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<SeedData>(stream, data10);
+                        }
+                        else if (ev is UpdatePickupData data11)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<UpdatePickupData>(stream, data11);
+                        }
+                        else if (ev is UpdatePlayerData data12)
+                        {
+                            MessagePack.MessagePackSerializer.Serialize<UpdatePlayerData>(stream, data12);
+                        }
+                        stream.Flush();
+                    }
                 }
                 stream.Close();
                 yield break;
             }
         }
 
-        public IEnumerator<float> Replay()
+        public IEnumerator<float> Replay(string path)
         {
-            while (true)
+            replayStarted = true;
+            replayPaused = false;
+            idDB = new Dictionary<int, int>();
+            using (var stream = new FileStream(path, FileMode.Open))
             {
-                yield return Timing.WaitForSeconds(MainClass.singleton.Config.replayDelay);
-                /*if (replayRunning && replayStarted && !replayPaused)
+                while (true)
                 {
-                    try
+                    if (replayPaused || !replayStarted)
                     {
-                        if (replayEvents.ContainsKey(currentFrameId))
-                        {
-                            foreach (var p in replayEvents[currentFrameId])
+                        yield return Timing.WaitForOneFrame;
+                        continue;
+                    }
+                    var oldPos = stream.Position;
+                    var data = (MessagePack.MessagePackSerializer.Deserialize<object[]>(stream));
+                    switch ((RecordEvents)data[0])
+                    {
+                        case RecordEvents.ReceiveSeed:
+                            stream.Position = oldPos;
+                            var seed = MessagePack.MessagePackSerializer.Deserialize<SeedData>(stream);
+                            RecorderCore.singleton.SeedID = seed.Seed;
+                            replayStarted = false;
+                            replayRunning = true;
+                            replayPaused = false;
+                            ReferenceHub.HostHub.playerStats.Roundrestart();
+                            Log.Info($"Received seed, {seed.Seed}");
+                            break;
+                        case RecordEvents.PlayerInfo:
+                            stream.Position = oldPos;
+                            var pinfo = MessagePack.MessagePackSerializer.Deserialize<PlayerInfoData>(stream);
+                            if (!idDB.ContainsKey(pinfo.PlayerID))
                             {
-                                if (p is PlayerData)
-                                {
-                                    var plr = (p as PlayerData);
-                                    switch (p.Event)
-                                    {
-                                        case EventType.CreatePlayer:
-                                            if (playerDb.ContainsKey(plr.UserID))
-                                                continue;
-                                            Log.Info($"Create new fake player: {plr.UserID}");
-                                            CreateFakePlayer(plr.UserName, plr.UserID, plr.Role);
-                                            break;
-                                        case EventType.RemovePlayer:
-                                            if (playerDb.ContainsKey(plr.UserID))
-                                            {
-                                                Log.Info($"Destroy fake player: {plr.UserID}");
-                                                var id = Player.Get(playerDb[plr.UserID]).Id;
-                                                Player.Dictionary.Remove(playerDb[plr.UserID]);
-                                                Player.IdsCache.Remove(id);
-                                                PlayerManager.RemovePlayer(playerDb[plr.UserID]);
-                                                NetworkServer.Destroy(playerDb[plr.UserID]);
-                                                playerDb.Remove(plr.UserID);
-                                            }
-                                            break;
-                                        case EventType.UpdatePlayer:
-                                            if (playerDb.ContainsKey(plr.UserID))
-                                            {
-                                                var hub = Player.Get(playerDb[plr.UserID]);
-                                                hub.ReferenceHub.inventory.Network_curItemSynced = plr.HoldingItem;
-                                                hub.Rotations = plr.Rotation.Vector;
-                                                hub.Position = plr.Position.Vector;
-                                                hub.ReferenceHub.animationController.Networkspeed = plr.Speed.Vector;
-                                                hub.ReferenceHub.animationController.NetworkcurAnim = plr.CurAnim;
-                                                hub.ReferenceHub.animationController.Network_curMoveState = (byte)plr.MoveState;
-                                            }
-                                            else
-                                            {
-                                                CreateFakePlayer(plr.UserName, plr.UserID, plr.Role);
-                                            }
-                                            break;
-                                    }
-                                }
-                                else if (p is PickupData)
-                                {
-                                    switch (p.Event)
-                                    {
-                                        case EventType.CreateItem:
-                                            var itm = (p as PickupData);
-                                            if (itemData.ContainsKey(itm.ID))
-                                                continue;
-                                            Log.Info($"Create new fake item: {itm.ID} Item: {itm.Item}");
-                                            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
-                                            NetworkServer.Spawn(gameObject);
-                                            gameObject.GetComponent<Pickup>().SetupPickup((ItemType)itm.Item, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), itm.Position.Vector, Quaternion.Euler(new Vector3(0, 0, 0)));
-                                            itemData.Add(itm.ID, gameObject.GetComponent<Pickup>());
-                                            continue;
-                                        case EventType.RemoveItem:
-                                            var itm2 = (p as PickupData);
-                                            if (itemData.ContainsKey(itm2.ID))
-                                            {
-                                                Log.Info($"Destroy fake item: {itm2.ID} Item: {itm2.Item}");
-                                                NetworkServer.Destroy(itemData[itm2.ID].gameObject);
-                                                itemData.Remove(itm2.ID);
-                                            }
-                                            continue;
-                                        case EventType.UpdateItem:
-                                            var itm3 = (p as PickupData);
-                                            if (itemData.ContainsKey(itm3.ID))
-                                            {
-                                                var pick = itemData[itm3.ID];
-                                                pick.Networkposition = itm3.Position.Vector;
-                                                pick.Networkrotation = itm3.Rotation.Rotation;
-                                                if (pick.NetworkitemId != itm3.Item)
-                                                    pick.NetworkitemId = itm3.Item;
-                                            }
-                                            continue;
-                                    }
-                                }
-                                else if (p is DoorData)
-                                {
-                                    var door = (p as DoorData);
-                                    var doorpos = door.Position.Vector;
+                                CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID, RoleType.Spectator);
+                                Log.Info($"New fake player created ID: {pinfo.PlayerID}, Nickname: {pinfo.UserName}, UserID: {pinfo.UserID}.");
+                            }
+                            break;
+                        case RecordEvents.UpdatePlayer:
+                            stream.Position = oldPos;
+                            var uplayer = MessagePack.MessagePackSerializer.Deserialize<UpdatePlayerData>(stream);
+                            var phub2 = Player.Get(idDB[uplayer.PlayerID]);
+                            if (phub2 != null)
+                            {
+                                phub2.ReferenceHub.inventory.Network_curItemSynced = (ItemType)uplayer.HoldingItem;
+                                phub2.ReferenceHub.animationController.NetworkcurAnim = uplayer.CurrentAnim;
+                                phub2.ReferenceHub.animationController.Networkspeed = uplayer.Speed.GetVector();
+                                phub2.ReferenceHub.animationController.Network_curMoveState = uplayer.MoveState;
+                                phub2.Position = uplayer.Position.GetVector();
+                                phub2.Rotations = uplayer.Rotation.GetVector();
+                            }
+                            break;
+                        case RecordEvents.PlayerLeave:
+                            stream.Position = oldPos;
+                            var lplayer = MessagePack.MessagePackSerializer.Deserialize<LeaveData>(stream);
+                            var phub3 = Player.Get(idDB[lplayer.PlayerID]);
+                            if (phub3 != null)
+                            {
+                                var obj = phub3.GameObject;
+                                Player.Dictionary.Remove(obj);
+                                Player.IdsCache.Remove(idDB[lplayer.PlayerID]);
+                                PlayerManager.RemovePlayer(obj);
+                                NetworkServer.Destroy(obj);
+                                Log.Info($"Fake player removed ID: {lplayer.PlayerID}.");
+                            }
+                            break;
+                        case RecordEvents.CreatePickup:
+                            stream.Position = oldPos;
+                            var cpickup = MessagePack.MessagePackSerializer.Deserialize<CreatePickupData>(stream);
+                            if (itemData.ContainsKey(cpickup.ItemID))
+                                break;
+                            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
+                            NetworkServer.Spawn(gameObject);
+                            gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.GetVector(), Quaternion.Euler(new Vector3(0, 0, 0)));
+                            itemData.Add(cpickup.ItemID, gameObject.GetComponent<Pickup>());
+                            Log.Info($"New fake item created ID: {cpickup.ItemID}, ItemType: {(ItemType)cpickup.ItemType}.");
+                            break;
+                        case RecordEvents.UpdatePickup:
+                            stream.Position = oldPos;
+                            var upickup = MessagePack.MessagePackSerializer.Deserialize<UpdatePickupData>(stream);
+                            if (itemData.ContainsKey(upickup.ItemID))
+                            {
+                                var pick = itemData[upickup.ItemID];
+                                pick.Networkposition = upickup.Position.GetVector();
+                                pick.Networkrotation = upickup.Rotation.GetQuaternion();
+                                if (pick.NetworkitemId != (ItemType)upickup.ItemType)
+                                    pick.NetworkitemId = (ItemType)upickup.ItemType;
+                            }
+                            break;
+                        case RecordEvents.RemovePickup:
+                            stream.Position = oldPos;
+                            var rpickup = MessagePack.MessagePackSerializer.Deserialize<RemovePickupData>(stream);
+                            if (itemData.ContainsKey(rpickup.ItemID))
+                            {
+                                NetworkServer.Destroy(itemData[rpickup.ItemID].gameObject);
+                                itemData.Remove(rpickup.ItemID);
+                                Log.Info($"Fake item removed ID: {rpickup.ItemID}.");
+                            }
+                            break;
+                        case RecordEvents.DoorState:
+                            stream.Position = oldPos;
+                            var ddata = MessagePack.MessagePackSerializer.Deserialize<DoorData>(stream);
+                            var doorpos = ddata.Position.GetVector();
 
-                                    Door bestDoor = null;
-                                    float bestDistance = 999f;
-                                    foreach(var dor in Map.Doors)
-                                    {
-                                        float distance = Vector3.Distance(dor.transform.position, doorpos);
-                                        if (distance < bestDistance)
-                                        {
-                                            bestDoor = dor;
-                                            bestDistance = distance;
-                                        }
-                                    }
-                                    if (bestDoor != null)
-                                    {
-                                        bestDoor.NetworkisOpen = door.state;
-                                        bestDoor.RpcDoSound();
-                                    }
-                                }
-                                else if (p is LiftData)
+                            Door bestDoor = null;
+                            float bestDistance = 999f;
+                            foreach (var dor in Map.Doors)
+                            {
+                                float distance = Vector3.Distance(dor.transform.position, doorpos);
+                                if (distance < bestDistance)
                                 {
-                                    var lift = (p as LiftData);
-                                    foreach (var lift2 in Map.Lifts)
-                                        if (lift2.elevatorName == lift.ElevatorName)
-                                            lift2.UseLift();
-                                }
-                                else if (p is WeaponData)
-                                {
-                                    var weapon = (p as WeaponData);
-                                    if (!playerDb.ContainsKey(weapon.UserID))
-                                        continue;
-                                    var plr = Player.Get(playerDb[weapon.UserID]);
-                                    switch(weapon.Event)
-                                    {
-                                        case EventType.WeaponFire:
-                                            plr.ReferenceHub.weaponManager.RpcConfirmShot(false, weapon.WeaponID);
-                                            continue;
-                                        case EventType.WeaponReload:
-                                            plr.ReferenceHub.weaponManager.RpcReload(weapon.WeaponID);
-                                            continue;
-                                    }
-                                }
-                                else if (p is ThrowGrenadeData)
-                                {
-                                    var grenade = (p as ThrowGrenadeData);
-                                    if (!playerDb.ContainsKey(grenade.UserID))
-                                        continue;
-                                    var plr = Player.Get(playerDb[grenade.UserID]);
-                                    plr.GrenadeManager.CallCmdThrowGrenade(grenade.Grenadeid, grenade.SlowThrow, grenade.Fusetime);
+                                    bestDoor = dor;
+                                    bestDistance = distance;
                                 }
                             }
-                        }
-                    }catch(Exception ex)
-                    {
-                        Log.Error(ex.ToString());
+                            if (bestDoor != null)
+                            {
+                                bestDoor.NetworkisOpen = ddata.State;
+                                bestDoor.RpcDoSound();
+                            }
+                            break;
+                        case RecordEvents.UpdateRole:
+                            stream.Position = oldPos;
+                            var urole = MessagePack.MessagePackSerializer.Deserialize<UpdateRoleData>(stream);
+                            var phub4 = Player.Get(idDB[urole.PlayerID]);
+                            if (phub4 != null)
+                            {
+                                phub4.ReferenceHub.characterClassManager.NetworkCurClass = (RoleType)urole.RoleID;
+                                Log.Info($"Changed fake player role ID: {urole.PlayerID}, RoleType: {(RoleType)urole.RoleID}.");
+                            }
+                            break;
+                        case RecordEvents.UseLift:
+                            stream.Position = oldPos;
+                            var ulift = MessagePack.MessagePackSerializer.Deserialize<LiftData>(stream);
+                            foreach (var lift2 in Map.Lifts)
+                                if (lift2.elevatorName == ulift.Elevatorname)
+                                    lift2.UseLift();
+                            break;
+                        case RecordEvents.ShotWeapon:
+                            stream.Position = oldPos;
+                            var sweapon = MessagePack.MessagePackSerializer.Deserialize<ShotWeaponData>(stream);
+                            var phub5 = Player.Get(sweapon.PlayerID + 30);
+                            if (phub5 != null)
+                                phub5.ReferenceHub.weaponManager.RpcConfirmShot(false, (int)phub5.ReferenceHub.weaponManager.curWeapon);
+                            break;
+                        case RecordEvents.ReloadWeapon:
+                            stream.Position = oldPos;
+                            var rweapon = MessagePack.MessagePackSerializer.Deserialize<ReloadWeaponData>(stream);
+                            var phub6 = Player.Get(rweapon.PlayerID + 30);
+                            if (phub6 != null)
+                                phub6.ReferenceHub.weaponManager.RpcReload(phub6.ReferenceHub.weaponManager.curWeapon);
+                            break;
+                        case RecordEvents.RoundEnd:
+                            Map.Broadcast(10, "PlayerRecord | ROUND ENDED");
+                            break;
+                        case RecordEvents.WaitFrame:
+                            yield return Timing.WaitForOneFrame;
+                            break;
                     }
-                    currentFrameId++;
                 }
             }
-            */
-            }
+            Log.Info("Replay ended");
+            yield break;
         }
 
         public IEnumerator<float> Recorder()
         {
             while (true)
             {
-                if (recorderRunning)
+                if (recorderRunning && handler.waitingforplayers)
                 {
                     foreach (var plr in Player.List)
                     {
                         try
                         {
-                            if (plr.Role == RoleType.Spectator)
+                            if (plr.Role == RoleType.Spectator || plr.Role == RoleType.None)
                                 continue;
                             dataQueue.Enqueue(new UpdatePlayerData()
                             {

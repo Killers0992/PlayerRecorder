@@ -1,6 +1,5 @@
 ﻿using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
-using LiteDB;
 using MEC;
 using MessagePack;
 using Mirror;
@@ -21,7 +20,8 @@ namespace PlayerRecorder
 {
     public class EventHandlers
     {
-        private RecorderCore core; 
+        private RecorderCore core;
+        public bool firstrun = false;
         public EventHandlers(RecorderCore core)
         {
             this.core = core;
@@ -39,10 +39,13 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Server.RoundEnded += Server_RoundEnded;
             Exiled.Events.Handlers.Player.Joined += Player_Joined;
             Exiled.Events.Handlers.Player.Left += Player_Left;
+            firstrun = true;
         }
 
         private void Player_Left(Exiled.Events.EventArgs.LeftEventArgs ev)
         {
+            if (!core.recorderRunning)
+                return;
             core.dataQueue.Enqueue(new LeaveData()
             {
                 PlayerID = (sbyte)ev.Player.Id,
@@ -51,6 +54,8 @@ namespace PlayerRecorder
 
         private void Player_Joined(Exiled.Events.EventArgs.JoinedEventArgs ev)
         {
+            if (!core.recorderRunning)
+                return;
             core.dataQueue.Enqueue(new PlayerInfoData() 
             {
                 PlayerID = (sbyte)ev.Player.Id,
@@ -122,18 +127,18 @@ namespace PlayerRecorder
                 Position = ev.Door.transform.position.GetData(),
             });
         }
-
+        public CoroutineHandle replayHandler;
         private void Server_SendingRemoteAdminCommand(Exiled.Events.EventArgs.SendingRemoteAdminCommandEventArgs ev)
         {
             switch(ev.Name.ToUpper())
             {
                 case "REPLAY":
                     ev.IsAllowed = false;
-                    if (!ev.Sender.CheckPermission("playerrecorder.replay"))
+                    /*if (!ev.Sender.CheckPermission("playerrecorder.replay"))
                     {
                         ev.Sender.RemoteAdminMessage("No permission...", true, "PlayerRecorder");
                         break;
-                    }
+                    }*/
                     if (ev.Arguments.Count == 0)
                     {
                         ev.Sender.RemoteAdminMessage(string.Concat("Commands:",
@@ -154,9 +159,8 @@ namespace PlayerRecorder
                             {
                                 if (File.Exists("./RecorderData/" + ev.Arguments[1] + "/Record_" + ev.Arguments[2] + ".rd"))
                                 {
-                                    var p = "./RecorderData/" + ev.Arguments[1] + "/Record_" + ev.Arguments[2] + ".rd";
-
-                                    
+                                    Log.Info("Start prepare");
+                                    replayHandler = Timing.RunCoroutine(core.Replay("RecorderData/" + ev.Arguments[1] + "/Record_" + ev.Arguments[2] + ".rd"));
                                 }
                                 else
                                 {
@@ -248,23 +252,28 @@ namespace PlayerRecorder
             }
         }
 
-        static async Task<List<T>> DeserializeListFromStreamAsync<T>(Stream stream, CancellationToken cancellationToken)
-        {
-            var dataStructures = new List<T>();
-            using (var streamReader = new MessagePackStreamReader(stream))
-            {
-                while (await streamReader.ReadAsync(cancellationToken) is ReadOnlySequence<byte> msgpack)
-                {
-                    dataStructures.Add(MessagePackSerializer.Deserialize<T>(msgpack, cancellationToken: cancellationToken));
-                }
-            }
-
-            return dataStructures;
-        }
-
+        public bool waitingforplayers = false;
         private void Server_RestartingRound1()
         {
+            waitingforplayers = false;
             core.recorderRunning = false;
+            core.endInstance = false;
+            if (record != null)
+                Timing.KillCoroutines(record);
+            if (replayHandler != null)
+                Timing.KillCoroutines(replayHandler);
+            if (!core.replayRunning)
+                record = Timing.RunCoroutine(core.RecorderInstance());
+            if (!Directory.Exists("RecorderData/" + Server.Port))
+                Directory.CreateDirectory("RecorderData/" + Server.Port);
+            core.playerData = new List<string>();
+            core.itemsData = new Dictionary<Pickup, int>();
+            core.itemData = new Dictionary<int, Pickup>();
+            core.playerDb = new Dictionary<string, GameObject>();
+            if (core.replayRunning)
+                return;
+            core.recorderRunning = true;
+            Log.Info("New recorder instance created.");
         }
 
         private void Player_PickingUpItem(Exiled.Events.EventArgs.PickingUpItemEventArgs ev)
@@ -325,21 +334,18 @@ namespace PlayerRecorder
             core.dataQueue.Enqueue(new UpdateRoleData()
             {
                 PlayerID = (sbyte)ev.Player.Id,
-                RoleID = (sbyte)ev.Player.Role
+                RoleID = (sbyte)ev.NewRole
             });
         }
 
-
+        public CoroutineHandle record;
         private void WaitingForPlayers()
         {
-            core.endInstance = false;
-            Timing.RunCoroutine(core.RecorderInstance());
-            if (!Directory.Exists("RecorderData/" + Server.Port))
-                Directory.CreateDirectory("RecorderData/" + Server.Port);
-            core.playerData = new List<string>();
-            core.itemsData = new Dictionary<Pickup, int>();
-            core.itemData = new Dictionary<int, Pickup>();
-            core.playerDb = new Dictionary<string, GameObject>();
+            if (firstrun)
+            {
+                firstrun = false;
+                Server_RestartingRound1();
+            }
             if (core.replayRunning)
             {
                 Log.Info("Start replay");
@@ -349,14 +355,13 @@ namespace PlayerRecorder
                 }
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
-                return;
             }
-            core.dataQueue.Enqueue(new SeedData()
-            {
-                Seed = ReferenceHub.HostHub.gameObject.GetComponent<RandomSeedSync>().Networkseed
-            });
-            core.recorderRunning = true;
-            Log.Info("New recorder instance created.");
+            waitingforplayers = true;
+        }
+
+        private void Server_RoundEnded()
+        {
+            throw new NotImplementedException();
         }
     }
 }
