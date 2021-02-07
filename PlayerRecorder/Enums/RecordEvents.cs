@@ -21,6 +21,6 @@ namespace PlayerRecorder.Enums
         RemovePickup,
         CreatePickup,
         UseLift,
-        WaitFrame
+        Delay
     }
 }

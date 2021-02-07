@@ -1,4 +1,5 @@
-﻿using PlayerRecorder.Enums;
+﻿using MessagePack;
+using PlayerRecorder.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +9,10 @@ using UnityEngine;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePack.MessagePackObject]
+    [MessagePackObject]
     public class UpdatePlayerData
     {
-        [MessagePack.Key(0)]
+        [Key(0)]
         public byte EventID { get; set; } = (byte)RecordEvents.UpdatePlayer;
         [MessagePack.Key(1)]
         public sbyte PlayerID { get; set; }

@@ -1,5 +1,6 @@
 ﻿using GameCore;
 using HarmonyLib;
+using MapGeneration;
 using Mirror;
 using System;
 using System.Collections.Generic;
@@ -12,31 +13,28 @@ namespace PlayerRecorder
 {
     public static class Patches
     {
-        [HarmonyPatch(typeof(RandomSeedSync), nameof(RandomSeedSync.Start))]
+        [HarmonyPatch(typeof(SeedSynchronizer), nameof(SeedSynchronizer.Start))]
         internal static class SeedPatch
         {
-            private static bool Prefix(RandomSeedSync __instance)
+            private static bool Prefix(SeedSynchronizer __instance)
             {
-				if (!__instance.isLocalPlayer || !NetworkServer.active)
+				if (!NetworkServer.active)
 				{
 					return false;
 				}
-				foreach (WorkStation workStation in UnityEngine.Object.FindObjectsOfType<WorkStation>())
+				int num = ConfigFile.ServerConfig.GetInt("map_seed", -1);
+				if (num < 1)
 				{
-					workStation.Networkposition = new Offset
-					{
-						position = workStation.transform.localPosition,
-						rotation = workStation.transform.localRotation.eulerAngles,
-						scale = Vector3.one
-					};
+					num = UnityEngine.Random.Range(1, int.MaxValue);
+					SeedSynchronizer.DebugInfo("Server has successfully generated a random seed: " + num, MessageImportance.Normal, false);
 				}
-				__instance.Networkseed = RecorderCore.singleton.SeedID;
-				while (NetworkServer.active && __instance.Networkseed == -1)
+				else
 				{
-					__instance.Networkseed = UnityEngine.Random.Range(-999999999, 999999999);
+					SeedSynchronizer.DebugInfo("Server has successfully loaded a seed from config: " + num, MessageImportance.Normal, false);
 				}
+				__instance.Network_syncSeed = RecorderCore.singleton.SeedID != -1 ? RecorderCore.singleton.SeedID : Mathf.Clamp(num, 1, int.MaxValue);
 				return false;
-            }
+			}
         }
     }
 }

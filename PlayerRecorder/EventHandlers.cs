@@ -28,7 +28,6 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Server.WaitingForPlayers += WaitingForPlayers;
             Exiled.Events.Handlers.Player.ChangingRole += Player_ChangingRole;
             Exiled.Events.Handlers.Player.ItemDropped += Player_ItemDropped;
-            Exiled.Events.Handlers.Player.PickingUpItem += Player_PickingUpItem;
             Exiled.Events.Handlers.Server.RestartingRound += Server_RestartingRound1;
             Exiled.Events.Handlers.Server.SendingRemoteAdminCommand += Server_SendingRemoteAdminCommand;
             Exiled.Events.Handlers.Player.InteractingDoor += Player_InteractingDoor;
@@ -37,46 +36,35 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.Shot += Player_Shot;
             Exiled.Events.Handlers.Player.ReloadingWeapon += Player_ReloadingWeapon;
             Exiled.Events.Handlers.Server.RoundEnded += Server_RoundEnded;
-            Exiled.Events.Handlers.Player.Joined += Player_Joined;
-            Exiled.Events.Handlers.Player.Left += Player_Left;
+            Exiled.Events.Handlers.Player.Verified += Player_Verified;
+            Exiled.Events.Handlers.Map.SpawnedItem += Map_SpawnedItem;
             firstrun = true;
         }
 
-        private void Player_Left(Exiled.Events.EventArgs.LeftEventArgs ev)
+        private void Player_Verified(Exiled.Events.EventArgs.VerifiedEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            core.dataQueue.Enqueue(new LeaveData()
-            {
-                PlayerID = (sbyte)ev.Player.Id,
-            });
+            ev.Player.GameObject.AddComponent<RecordPlayer>();
         }
 
-        private void Player_Joined(Exiled.Events.EventArgs.JoinedEventArgs ev)
+        private void Map_SpawnedItem(Exiled.Events.EventArgs.SpawnedItemEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            core.dataQueue.Enqueue(new PlayerInfoData() 
-            {
-                PlayerID = (sbyte)ev.Player.Id,
-                UserID = ev.Player.UserId,
-                UserName = ev.Player.Nickname
-            });
+            ev.Pickup.gameObject.AddComponent<RecordPickup>();
         }
 
         private void Server_RoundEnded(Exiled.Events.EventArgs.RoundEndedEventArgs ev)
         {
             core.endInstance = true;
-            if (!core.recorderRunning)
-                return;
-            core.dataQueue.Enqueue(new RoundEndData());
         }
 
         private void Player_ReloadingWeapon(Exiled.Events.EventArgs.ReloadingWeaponEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            core.dataQueue.Enqueue(new ReloadWeaponData()
+            RecorderCore.OnReceiveEvent(new ReloadWeaponData()
             {
                 PlayerID = (sbyte)ev.Player.Id
             });
@@ -84,19 +72,19 @@ namespace PlayerRecorder
 
         private void Player_Shot(Exiled.Events.EventArgs.ShotEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            core.dataQueue.Enqueue(new ShotWeaponData()
+            RecorderCore.OnReceiveEvent(new ShotWeaponData()
             {
-                PlayerID = (sbyte)ev.Shooter.Id,
+                PlayerID = (sbyte)ev.Shooter.Id
             });
         }
 
         private void Player_Died(Exiled.Events.EventArgs.DiedEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            core.dataQueue.Enqueue(new UpdateRoleData()
+            RecorderCore.OnReceiveEvent(new UpdateRoleData()
             {
                 PlayerID = (sbyte)ev.Target.Id,
                 RoleID = (sbyte)RoleType.Spectator
@@ -105,11 +93,11 @@ namespace PlayerRecorder
 
         private void Player_InteractingElevator(Exiled.Events.EventArgs.InteractingElevatorEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
             if (ev.Status == Lift.Status.Moving)
                 return;
-            core.dataQueue.Enqueue(new LiftData()
+            RecorderCore.OnReceiveEvent(new LiftData()
             {
                 Elevatorname = ev.Lift.elevatorName
             });
@@ -117,14 +105,12 @@ namespace PlayerRecorder
 
         private void Player_InteractingDoor(Exiled.Events.EventArgs.InteractingDoorEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            if (ev.Door.moving.moving)
-                return;
-            core.dataQueue.Enqueue(new DoorData()
+            RecorderCore.OnReceiveEvent(new DoorData()
             {
-                State = !ev.Door.NetworkisOpen,
-                Position = ev.Door.transform.position.GetData(),
+                State = !ev.Door.TargetState,
+                Position = ev.Door.transform.position.GetData()
             });
         }
         public CoroutineHandle replayHandler;
@@ -157,10 +143,10 @@ namespace PlayerRecorder
                         case "PREPARE":
                             if (ev.Arguments.Count == 3)
                             {
-                                if (File.Exists("./RecorderData/" + ev.Arguments[1] + "/Record_" + ev.Arguments[2] + ".rd"))
+                                if (File.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1],"Record_" + ev.Arguments[2] + ".rd")))
                                 {
                                     Log.Info("Start prepare");
-                                    replayHandler = Timing.RunCoroutine(core.Replay("RecorderData/" + ev.Arguments[1] + "/Record_" + ev.Arguments[2] + ".rd"));
+                                    replayHandler = Timing.RunCoroutine(core.Replay(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1], "Record_" + ev.Arguments[2] + ".rd")));
                                 }
                                 else
                                 {
@@ -173,9 +159,9 @@ namespace PlayerRecorder
                             }
                             break;
                         case "START":
-                            if (core.replayRunning)
+                            if (RecorderCore.isReplayReady && !RecorderCore.isReplaying)
                             {
-                                core.replayStarted = true;
+                                RecorderCore.isReplaying = true;
                                 ev.Sender.RemoteAdminMessage("Replay started.", true, "PlayerRecorder");
                             }
                             else
@@ -184,10 +170,10 @@ namespace PlayerRecorder
                             }
                             break;
                         case "PAUSE":
-                            if (core.replayRunning)
+                            if (RecorderCore.isReplaying)
                             {
-                                core.replayPaused = !core.replayPaused;
-                                ev.Sender.RemoteAdminMessage($"Replay {(core.replayPaused ? "paused" : "started")}.", true, "PlayerRecorder");
+                                RecorderCore.isReplayPaused = !RecorderCore.isReplayPaused;
+                                ev.Sender.RemoteAdminMessage($"Replay {(RecorderCore.isReplayPaused ? "paused" : "started")}.", true, "PlayerRecorder");
                             }
                             else
                             {
@@ -200,7 +186,7 @@ namespace PlayerRecorder
                                 ev.Sender.RemoteAdminMessage("Syntax: PAUSE <value>", true, "PlayerRecorder");
                                 return;
                             }
-                            if (core.replayRunning)
+                            if (RecorderCore.isReplaying)
                             {
                                 if (float.TryParse(ev.Arguments[1], out float speed))
                                 {
@@ -218,10 +204,10 @@ namespace PlayerRecorder
                             }
                             break;
                         case "END":
-                            if (core.replayRunning)
+                            if (RecorderCore.isReplaying)
                             {
-                                core.replayRunning = false;
-                                core.replayStarted = false;
+                                RecorderCore.isReplaying = false;
+                                RecorderCore.isReplayReady = false;
                                 core.SeedID = -1;
                                 foreach (var dummy in core.playerDb)
                                 {
@@ -252,93 +238,54 @@ namespace PlayerRecorder
             }
         }
 
-        public bool waitingforplayers = false;
+        public static bool waitingforplayers = false;
         private void Server_RestartingRound1()
         {
             waitingforplayers = false;
-            core.recorderRunning = false;
+            RecorderCore.isRecording = false;
             core.endInstance = false;
-            if (record != null)
-                Timing.KillCoroutines(record);
             if (replayHandler != null)
                 Timing.KillCoroutines(replayHandler);
-            if (!core.replayRunning)
-                record = Timing.RunCoroutine(core.RecorderInstance());
-            if (!Directory.Exists("RecorderData/" + Server.Port))
-                Directory.CreateDirectory("RecorderData/" + Server.Port);
+            if (RecorderCore.singleton.recordingStream != null)
+            {
+                RecorderCore.singleton.recordingStream.Close();
+                RecorderCore.singleton.recordingStream.Dispose();
+                RecorderCore.singleton.recordingStream = null;
+            }
+            if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
+                Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
+            if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
+                Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
             core.playerData = new List<string>();
-            core.itemsData = new Dictionary<Pickup, int>();
             core.itemData = new Dictionary<int, Pickup>();
             core.playerDb = new Dictionary<string, GameObject>();
-            if (core.replayRunning)
+            if (RecorderCore.isReplayReady)
                 return;
-            core.recorderRunning = true;
+            core.StartRecording();
+            RecorderCore.isRecording = true;
             Log.Info("New recorder instance created.");
         }
 
-        private void Player_PickingUpItem(Exiled.Events.EventArgs.PickingUpItemEventArgs ev)
-        {
-            if (!core.recorderRunning)
-                return;
-            if (ev.Pickup == null)
-                return;
-            if (!core.itemsData.ContainsKey(ev.Pickup))
-                return;
-            int id = core.itemsData[ev.Pickup];
-            if (!core.savedItemPos.ContainsKey(id))
-                return;
-            core.savedItemPos.Remove(id);
-            core.itemsData.Remove(ev.Pickup);
-            core.dataQueue.Enqueue(new CreatePickupData()
-            {
-                ItemID = id,
-                ItemType = (int)ev.Pickup.ItemId,
-                Position = ev.Pickup.position.GetData(),
-                Rotation = ev.Pickup.rotation.GetData()
-            });
-        }
 
         private void Player_ItemDropped(Exiled.Events.EventArgs.ItemDroppedEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            int generatedID = -1;
-            for (int i = 1; i < int.MaxValue; i++)
-            {
-                if (core.itemsData.Values.Any(p => p == i))
-                    continue;
-
-                generatedID = i;
-                break;
-            }
-            if (core.itemsData.ContainsKey(ev.Pickup))
-                return;
-            core.itemsData.Add(ev.Pickup, generatedID);
-            if (core.savedItemPos.ContainsKey(generatedID))
-                return;
-            core.savedItemPos.Add(generatedID, new Vector3(0f, 0f, 0f));
-            core.dataQueue.Enqueue(new CreatePickupData()
-            {
-                ItemID = generatedID,
-                ItemType = (int)ev.Pickup.ItemId,
-                Position = ev.Pickup.position.GetData(),
-                Rotation = ev.Pickup.rotation.GetData()
-            });
+            ev.Pickup.gameObject.AddComponent<RecordPickup>();
         }
 
 
         private void Player_ChangingRole(Exiled.Events.EventArgs.ChangingRoleEventArgs ev)
         {
-            if (!core.recorderRunning)
+            if (!RecorderCore.isRecording)
                 return;
-            core.dataQueue.Enqueue(new UpdateRoleData()
+            RecorderCore.OnReceiveEvent(new UpdateRoleData()
             {
                 PlayerID = (sbyte)ev.Player.Id,
                 RoleID = (sbyte)ev.NewRole
             });
         }
 
-        public CoroutineHandle record;
         private void WaitingForPlayers()
         {
             if (firstrun)
@@ -346,7 +293,7 @@ namespace PlayerRecorder
                 firstrun = false;
                 Server_RestartingRound1();
             }
-            if (core.replayRunning)
+            if (RecorderCore.isReplayReady)
             {
                 Log.Info("Start replay");
                 foreach (var itm in UnityEngine.Object.FindObjectsOfType<Pickup>())
@@ -356,12 +303,16 @@ namespace PlayerRecorder
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
             }
+            else if (RecorderCore.isRecording)
+            {
+                foreach (var pickup in UnityEngine.Object.FindObjectsOfType<Pickup>())
+                {
+                    pickup.gameObject.AddComponent<RecordPickup>();
+                }
+            }
             waitingforplayers = true;
         }
 
-        private void Server_RoundEnded()
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }

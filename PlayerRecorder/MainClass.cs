@@ -3,6 +3,7 @@ using MessagePack;
 using MessagePack.Resolvers;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,10 +21,15 @@ namespace PlayerRecorder
 
         public static MainClass singleton;
 
+        public static string pluginDir;
+
         public override void OnEnabled()
         {
+            pluginDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "Plugins", "PlayerRecorder");
+            if (!Directory.Exists(pluginDir))
+                Directory.CreateDirectory(pluginDir);
             singleton = this;
-            core = new RecorderCore();
+            core = CustomNetworkManager.singleton.gameObject.AddComponent<RecorderCore>();
             eventHandlers = new EventHandlers(core);
             core.handler = eventHandlers;
             HarmonyLib.Harmony hrm = new HarmonyLib.Harmony("Patcher.recorder");

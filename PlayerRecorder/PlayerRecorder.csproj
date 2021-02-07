@@ -40,29 +40,30 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp_publicized">
+    <Reference Include="Assembly-CSharp_publicized, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
     </Reference>
     <Reference Include="CommandSystem.Core">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\CommandSystem.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.API, Version=2.1.21.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.21\lib\net472\Exiled.API.dll</HintPath>
+    <Reference Include="Exiled.API, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.API.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Bootstrap, Version=2.1.21.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.21\lib\net472\Exiled.Bootstrap.dll</HintPath>
+    <Reference Include="Exiled.Bootstrap, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Bootstrap.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Events, Version=2.1.21.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.21\lib\net472\Exiled.Events.dll</HintPath>
+    <Reference Include="Exiled.Events, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Events.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Loader, Version=2.1.21.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.21\lib\net472\Exiled.Loader.dll</HintPath>
+    <Reference Include="Exiled.Loader, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Loader.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Permissions, Version=2.1.21.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.21\lib\net472\Exiled.Permissions.dll</HintPath>
+    <Reference Include="Exiled.Permissions, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Permissions.dll</HintPath>
     </Reference>
     <Reference Include="Exiled.Updater, Version=3.0.3.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.21\lib\net472\Exiled.Updater.dll</HintPath>
+      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Updater.dll</HintPath>
     </Reference>
     <Reference Include="MessagePack, Version=2.2.0.0, Culture=neutral, PublicKeyToken=b4a0369545f0a1be, processorArchitecture=MSIL">
       <HintPath>..\packages\MessagePack.2.2.85\lib\netstandard2.0\MessagePack.dll</HintPath>
@@ -117,12 +118,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums\EventType.cs" />
     <Compile Include="Enums\RecordEvents.cs" />
     <Compile Include="EventHandlers.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="MainClass.cs" />
+    <Compile Include="RecordPickup.cs" />
+    <Compile Include="RecordPlayer.cs" />
     <Compile Include="Structs\DoorData.cs" />
+    <Compile Include="Structs\DelayData.cs" />
+    <Compile Include="Structs\InvokeEvent.cs" />
     <Compile Include="Structs\LeaveData.cs" />
     <Compile Include="Structs\LiftData.cs" />
     <Compile Include="Structs\CreatePickupData.cs" />
@@ -142,7 +146,6 @@
     <Compile Include="RecorderCore.cs" />
     <Compile Include="Structs\Vector2Data.cs" />
     <Compile Include="Structs\Vector3Data.cs" />
-    <Compile Include="Structs\WaitFrameData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

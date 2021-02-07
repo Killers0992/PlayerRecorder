@@ -12,13 +12,13 @@ namespace PlayerRecorder.Structs
     public class QuaternionData
     {
         [Key(0)]
-        public float x;
+        public float x { get; set; }
         [Key(1)]
-        public float y;
+        public float y { get; set; }
         [Key(2)]
-        public float z;
+        public float z { get; set; }
         [Key(3)]
-        public float w;
+        public float w { get; set; }
 
         [SerializationConstructor]
         public QuaternionData(float x, float y, float z, float w)
@@ -28,10 +28,11 @@ namespace PlayerRecorder.Structs
             this.z = z;
             this.w = w;
         }
-
-        public Quaternion GetQuaternion()
+        public Quaternion SetQuaternion()
         {
-            return new Quaternion(x, y, z,w);
+            return new Quaternion(x, y,z,w);
         }
+        [IgnoreMember]
+        public Quaternion quaternion;
     }
 }

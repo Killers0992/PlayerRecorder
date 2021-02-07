@@ -13,7 +13,7 @@ namespace PlayerRecorder.Structs
     public class UpdatePickupData
     {
         [Key(0)]
-        public byte EventID { get; set; }
+        public byte EventID { get; set; } = (byte)RecordEvents.UpdatePickup;
         [Key(1)]
         public int ItemID { get; set; }
         [Key(2)]
