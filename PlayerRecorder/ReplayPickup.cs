@@ -11,6 +11,8 @@ namespace PlayerRecorder
 {
     public class ReplayPickup : MonoBehaviour
     {
+        public int uniqueId = 0;
+
         Pickup _pickup;
         public Pickup pickup
         {
@@ -22,7 +24,6 @@ namespace PlayerRecorder
             }
         }
 
-        public int uniqueId = 0;
 
         void Awake()
         {

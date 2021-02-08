@@ -156,5 +156,8 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+    <PropertyGroup>
+    <PostBuildEvent>xcopy /y ".\PlayerRecorder.dll" "..\..\..\Output"</PostBuildEvent>
+  </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

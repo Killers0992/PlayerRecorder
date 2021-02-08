@@ -11,6 +11,11 @@ namespace PlayerRecorder
 {
     public class RecordPickup : MonoBehaviour
     {
+        public int uniqueId = 0;
+
+        public Vector3 currentPosition = new Vector3(0f, 0f, 0f);
+        public Quaternion currentRotation = new Quaternion(0f, 0f, 0f, 0f);
+
         Pickup _pickup;
         public Pickup pickup
         {
@@ -21,10 +26,6 @@ namespace PlayerRecorder
                 return _pickup;
             }
         }
-        public Vector3 currentPosition = new Vector3(0f, 0f, 0f);
-        public Quaternion currentRotation = new Quaternion(0f, 0f,0f,0f);
-
-        public int uniqueId = 0;
 
         void Awake()
         {

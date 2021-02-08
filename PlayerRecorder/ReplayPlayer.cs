@@ -11,7 +11,10 @@ namespace PlayerRecorder
 {
     public class ReplayPlayer : MonoBehaviour
     {
+        public int uniqueId = 0;
+
         ReferenceHub _hub;
+
         public ReferenceHub hub
         {
             get
@@ -22,11 +25,10 @@ namespace PlayerRecorder
             }
         }
 
-        public Player player;
-        public int uniqueId = 0;
 
         void Awake()
         {
+            this.hub.playerMovementSync._hub = hub;
             Log.Info($"Player replay init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecorderCore.OnRegisterReplayPlayer(this);
         }

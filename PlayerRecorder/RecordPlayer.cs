@@ -11,6 +11,9 @@ namespace PlayerRecorder
 {
     public class RecordPlayer : MonoBehaviour
     {
+        public Vector3 currentPosition = new Vector3(0f, 0f, 0f);
+        public Vector2 currentRotation = new Vector2(0f, 0f);
+
         ReferenceHub _hub;
         public ReferenceHub hub
         {
@@ -21,9 +24,6 @@ namespace PlayerRecorder
                 return _hub;
             }
         }
-
-        public Vector3 currentPosition = new Vector3(0f,0f,0f);
-        public Vector2 currentRotation = new Vector2(0f,0f);
 
         void Awake() 
         { 
