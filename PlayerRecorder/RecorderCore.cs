@@ -37,6 +37,12 @@ namespace PlayerRecorder
         public static event EventHandler<RecordPickup> RegisterRecordPickup;
         public static event EventHandler<RecordPickup> UnRegisterRecordPickup;
 
+        public static event EventHandler<ReplayPlayer> RegisterReplayPlayer;
+        public static event EventHandler<ReplayPlayer> UnRegisterReplayPlayer;
+
+        public static event EventHandler<ReplayPickup> RegisterReplayPickup;
+        public static event EventHandler<ReplayPickup> UnRegisterReplayPickup;
+
         public static event EventHandler<object> ReceiveEvent;
 
         public static void OnRegisterRecordPlayer(RecordPlayer recordplayer)
@@ -59,15 +65,31 @@ namespace PlayerRecorder
             UnRegisterRecordPickup.Invoke(null, recordpickup);
         }
 
+        public static void OnRegisterReplayPlayer(ReplayPlayer replayplayer)
+        {
+            RegisterReplayPlayer.Invoke(null, replayplayer);
+        }
+
+        public static void OnUnRegisterReplayPlayer(ReplayPlayer replayplayer)
+        {
+            UnRegisterReplayPlayer.Invoke(null, replayplayer);
+        }
+
+        public static void OnRegisterReplayPickup(ReplayPickup replaypickup)
+        {
+            RegisterReplayPickup.Invoke(null, replaypickup);
+        }
+
+        public static void OnUnRegisterReplayPickup(ReplayPickup replaypickup)
+        {
+            UnRegisterReplayPickup.Invoke(null, replaypickup);
+        }
+
         public static void OnReceiveEvent(object eventObject)
         {
             ReceiveEvent.Invoke(null, eventObject);
         }
 
-        public Dictionary<int, Pickup> itemData = new Dictionary<int, Pickup>();
-
-        public List<string> playerData = new List<string>();
-        public Dictionary<string, GameObject> playerDb = new Dictionary<string, GameObject>();
         public EventHandlers handler;
 
         public float timeElapsed = 0f;
@@ -80,65 +102,71 @@ namespace PlayerRecorder
 
         private void EventReceived(object sender, object ev)
         {
-            MessagePack.MessagePackSerializer.Serialize<DelayData>(recordingStream, new DelayData() { DelayTime = timeElapsed });
-            timeElapsed = 0;
-            if (ev is PlayerInfoData data)
+            try
             {
-                MessagePack.MessagePackSerializer.Serialize<PlayerInfoData>(recordingStream, data);
-            }
-            else if (ev is LeaveData data1)
+                MessagePack.MessagePackSerializer.Serialize<DelayData>(recordingStream, new DelayData() { DelayTime = timeElapsed });
+                timeElapsed = 0;
+                if (ev is PlayerInfoData data)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<PlayerInfoData>(recordingStream, data);
+                }
+                else if (ev is LeaveData data1)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<LeaveData>(recordingStream, data1);
+                }
+                else if (ev is UpdateRoleData data2)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<UpdateRoleData>(recordingStream, data2);
+                }
+                else if (ev is DoorData data3)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<DoorData>(recordingStream, data3);
+                }
+                else if (ev is LiftData data4)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<LiftData>(recordingStream, data4);
+                }
+                else if (ev is CreatePickupData data5)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<CreatePickupData>(recordingStream, data5);
+                }
+                else if (ev is ReloadWeaponData data6)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<ReloadWeaponData>(recordingStream, data6);
+                }
+                else if (ev is ShotWeaponData data7)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<ShotWeaponData>(recordingStream, data7);
+                }
+                else if (ev is RemovePickupData data8)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<RemovePickupData>(recordingStream, data8);
+                }
+                else if (ev is RoundEndData data9)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<RoundEndData>(recordingStream, data9);
+                }
+                else if (ev is SeedData data10)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<SeedData>(recordingStream, data10);
+                }
+                else if (ev is UpdatePickupData data11)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<UpdatePickupData>(recordingStream, data11);
+                }
+                else if (ev is UpdatePlayerData data12)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<UpdatePlayerData>(recordingStream, data12);
+                }
+                else if (ev is DelayData data123)
+                {
+                    MessagePack.MessagePackSerializer.Serialize<DelayData>(recordingStream, data123);
+                }
+                recordingStream.Flush();
+            }catch(Exception ex)
             {
-                MessagePack.MessagePackSerializer.Serialize<LeaveData>(recordingStream, data1);
+                Log.Error(ex.ToString());
             }
-            else if (ev is UpdateRoleData data2)
-            {
-                MessagePack.MessagePackSerializer.Serialize<UpdateRoleData>(recordingStream, data2);
-            }
-            else if (ev is DoorData data3)
-            {
-                MessagePack.MessagePackSerializer.Serialize<DoorData>(recordingStream, data3);
-            }
-            else if (ev is LiftData data4)
-            {
-                MessagePack.MessagePackSerializer.Serialize<LiftData>(recordingStream, data4);
-            }
-            else if (ev is CreatePickupData data5)
-            {
-                MessagePack.MessagePackSerializer.Serialize<CreatePickupData>(recordingStream, data5);
-            }
-            else if (ev is ReloadWeaponData data6)
-            {
-                MessagePack.MessagePackSerializer.Serialize<ReloadWeaponData>(recordingStream, data6);
-            }
-            else if (ev is ShotWeaponData data7)
-            {
-                MessagePack.MessagePackSerializer.Serialize<ShotWeaponData>(recordingStream, data7);
-            }
-            else if (ev is RemovePickupData data8)
-            {
-                MessagePack.MessagePackSerializer.Serialize<RemovePickupData>(recordingStream, data8);
-            }
-            else if (ev is RoundEndData data9)
-            {
-                MessagePack.MessagePackSerializer.Serialize<RoundEndData>(recordingStream, data9);
-            }
-            else if (ev is SeedData data10)
-            {
-                MessagePack.MessagePackSerializer.Serialize<SeedData>(recordingStream, data10);
-            }
-            else if (ev is UpdatePickupData data11)
-            {
-                MessagePack.MessagePackSerializer.Serialize<UpdatePickupData>(recordingStream, data11);
-            }
-            else if (ev is UpdatePlayerData data12)
-            {
-                MessagePack.MessagePackSerializer.Serialize<UpdatePlayerData>(recordingStream, data12);
-            }
-            else if (ev is DelayData data123)
-            {
-                MessagePack.MessagePackSerializer.Serialize<DelayData>(recordingStream, data123);
-            }
-            recordingStream.Flush();
         }
 
         void Update()
@@ -147,7 +175,7 @@ namespace PlayerRecorder
                 timeElapsed += Time.deltaTime;
         }
 
-        public void CreateFakePlayer(int clientid, string name, string userId, RoleType RoleType)
+        public void CreateFakePlayer(sbyte clientid, string name, string userId, RoleType RoleType)
         {
             try
             {
@@ -160,22 +188,30 @@ namespace PlayerRecorder
                 ccm.CurClass = RoleType;
                 obj.GetComponent<NicknameSync>().Network_myNickSync = string.IsNullOrEmpty(name) ? "[REC] Unknown name" :  $"[REC] {name}";
                 obj.GetComponent<QueryProcessor>().NetworkPlayerId = QueryProcessor._idIterator++;
-                idDB.Add(clientid, obj.GetComponent<QueryProcessor>().NetworkPlayerId);
                 obj.GetComponent<QueryProcessor>()._ipAddress = "127.0.0.WAN";
                 obj.transform.position = new Vector3(0f, 0f, 0f);
                 NetworkServer.Spawn(obj);
-                PlayerManager.AddPlayer(obj);
-                hubs.Add(obj.GetComponent<QueryProcessor>().NetworkPlayerId, ReferenceHub.GetHub(obj));
+                Player ply_obj = new Player(obj);
+                Player.Dictionary.Add(obj, ply_obj);
+                Player.IdsCache.Add(obj.GetComponent<QueryProcessor>().NetworkPlayerId, ply_obj);
+                var rplayer = obj.AddComponent<ReplayPlayer>();
+                rplayer.uniqueId = clientid;
+                replayPlayers.Add(clientid, rplayer);
+
             }
             catch (Exception ex)
             {
                 Log.Error(ex.ToString());
             }
         }
-        public Dictionary<int, int> idDB = new Dictionary<int, int>();
         public bool endInstance = false;
 
         public FileStream recordingStream;
+
+        public static Dictionary<int, ReplayPlayer> replayPlayers = new Dictionary<int, ReplayPlayer>();
+        public static Dictionary<int, ReplayPickup> replayPickups = new Dictionary<int, ReplayPickup>();
+
+        public static Dictionary<int, RecordPickup> recordPickups = new Dictionary<int, RecordPickup>();
 
         public void StartRecording()
         {   
@@ -186,29 +222,30 @@ namespace PlayerRecorder
             });
         }
 
-
-
-        public Dictionary<int, ReferenceHub> hubs = new Dictionary<int, ReferenceHub>();
-
-
         public IEnumerator<float> Replay(string path)
         {
-            idDB = new Dictionary<int, int>();
             using (var stream = new FileStream(path, FileMode.Open))
             {
 
                 while (true)
                 {
+                    scam:
                     if (isReplayPaused || (!isReplaying && isReplayReady))
                     {
-                        isReplaying = true;
                         yield return Timing.WaitForOneFrame;
-                        continue;
+                        Log.Info("Waiting");
+                        goto scam;
                     }
                     var oldPos = stream.Position;
-                    var data = (MessagePack.MessagePackSerializer.Deserialize<object[]>(stream));
-
-
+                    object[] data = null;
+                    try
+                    {
+                        data = (MessagePack.MessagePackSerializer.Deserialize<object[]>(stream));
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
                     switch ((RecordEvents)data[0])
                     {
                         case RecordEvents.ReceiveSeed:
@@ -222,72 +259,53 @@ namespace PlayerRecorder
                         case RecordEvents.PlayerInfo:
                             stream.Position = oldPos;
                             var pinfo = MessagePack.MessagePackSerializer.Deserialize<PlayerInfoData>(stream);
-                            if (!idDB.ContainsKey(pinfo.PlayerID))
-                            {
-                                CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID, RoleType.Spectator);
-                                Log.Info($"New fake player created ID: {pinfo.PlayerID}, Nickname: {pinfo.UserName}, UserID: {pinfo.UserID}.");
-                            }
-                            break;
-                        case RecordEvents.UpdatePlayer:
-                            stream.Position = oldPos;
-                            var uplayer = MessagePack.MessagePackSerializer.Deserialize<UpdatePlayerData>(stream);
-                            var phub2 = Player.Get(idDB[uplayer.PlayerID]);
-                            if (phub2 != null)
-                            {
-                                phub2.ReferenceHub.inventory.Network_curItemSynced = (ItemType)uplayer.HoldingItem;
-                                phub2.ReferenceHub.animationController.NetworkcurAnim = uplayer.CurrentAnim;
-                                phub2.ReferenceHub.animationController.Networkspeed = uplayer.Speed.SetVector();
-                                phub2.ReferenceHub.animationController.Network_curMoveState = uplayer.MoveState;
-                                phub2.Position = uplayer.Position.SetVector();
-                                phub2.Rotations = uplayer.Rotation.SetVector();
-                            }
-                            break;
-                        case RecordEvents.PlayerLeave:
-                            stream.Position = oldPos;
-                            var lplayer = MessagePack.MessagePackSerializer.Deserialize<LeaveData>(stream);
-                            var phub3 = Player.Get(idDB[lplayer.PlayerID]);
-                            if (phub3 != null)
-                            {
-                                var obj = phub3.GameObject;
-                                Player.Dictionary.Remove(obj);
-                                Player.IdsCache.Remove(idDB[lplayer.PlayerID]);
-                                PlayerManager.RemovePlayer(obj);
-                                NetworkServer.Destroy(obj);
-                                Log.Info($"Fake player removed ID: {lplayer.PlayerID}.");
-                            }
+                            Log.Info($"Create player");
+                            CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID, RoleType.Spectator);
                             break;
                         case RecordEvents.CreatePickup:
                             stream.Position = oldPos;
                             var cpickup = MessagePack.MessagePackSerializer.Deserialize<CreatePickupData>(stream);
-                            if (itemData.ContainsKey(cpickup.ItemID))
-                                break;
+                            Log.Info($"Create pickup");
                             GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
                             NetworkServer.Spawn(gameObject);
                             gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.SetVector(), Quaternion.Euler(new Vector3(0, 0, 0)));
-                            itemData.Add(cpickup.ItemID, gameObject.GetComponent<Pickup>());
-                            Log.Info($"New fake item created ID: {cpickup.ItemID}, ItemType: {(ItemType)cpickup.ItemType}.");
+                            var rpickup = gameObject.AddComponent<ReplayPickup>();
+                            rpickup.uniqueId = cpickup.ItemID;
+                            replayPickups.Add(cpickup.ItemID, rpickup);
+                            break;
+                        case RecordEvents.UpdatePlayer:
+                            stream.Position = oldPos;
+                            var uplayer = MessagePack.MessagePackSerializer.Deserialize<UpdatePlayerData>(stream);
+                            if (!replayPlayers.ContainsKey(uplayer.PlayerID))
+                                break;
+                            Log.Info($"Update player");
+                            replayPlayers[uplayer.PlayerID].UpdatePlayer(uplayer);
                             break;
                         case RecordEvents.UpdatePickup:
                             stream.Position = oldPos;
                             var upickup = MessagePack.MessagePackSerializer.Deserialize<UpdatePickupData>(stream);
-                            if (itemData.ContainsKey(upickup.ItemID))
-                            {
-                                var pick = itemData[upickup.ItemID];
-                                pick.Networkposition = upickup.Position.SetVector();
-                                pick.Networkrotation = upickup.Rotation.SetQuaternion();
-                                if (pick.NetworkitemId != (ItemType)upickup.ItemType)
-                                    pick.NetworkitemId = (ItemType)upickup.ItemType;
-                            }
+                            if (!replayPickups.ContainsKey(upickup.ItemID))
+                                break;
+                            Log.Info($"Update pickup");
+                            replayPickups[upickup.ItemID].UpdatePickup(upickup);
+                            break;
+                        case RecordEvents.PlayerLeave:
+                            stream.Position = oldPos;
+                            var lplayer = MessagePack.MessagePackSerializer.Deserialize<LeaveData>(stream);
+                            if (!replayPlayers.ContainsKey(lplayer.PlayerID))
+                                break;
+                            Log.Info($"Remove player");
+                            var rplayer = replayPlayers[lplayer.PlayerID];
+                            NetworkServer.Destroy(rplayer.gameObject);
                             break;
                         case RecordEvents.RemovePickup:
                             stream.Position = oldPos;
-                            var rpickup = MessagePack.MessagePackSerializer.Deserialize<RemovePickupData>(stream);
-                            if (itemData.ContainsKey(rpickup.ItemID))
-                            {
-                                NetworkServer.Destroy(itemData[rpickup.ItemID].gameObject);
-                                itemData.Remove(rpickup.ItemID);
-                                Log.Info($"Fake item removed ID: {rpickup.ItemID}.");
-                            }
+                            var rppickup = MessagePack.MessagePackSerializer.Deserialize<RemovePickupData>(stream);
+                            if (!replayPickups.ContainsKey(rppickup.ItemID))
+                                break;
+                            Log.Info($"Remove pickup");
+                            var rrpickup = replayPickups[rppickup.ItemID];
+                            NetworkServer.Destroy(rrpickup.gameObject);
                             break;
                         case RecordEvents.DoorState:
                             stream.Position = oldPos;
@@ -309,16 +327,15 @@ namespace PlayerRecorder
                             {
                                 bestDoor.TargetState = ddata.State;
                             }
+                            Log.Info($"Use door");
                             break;
                         case RecordEvents.UpdateRole:
                             stream.Position = oldPos;
                             var urole = MessagePack.MessagePackSerializer.Deserialize<UpdateRoleData>(stream);
-                            var phub4 = Player.Get(idDB[urole.PlayerID]);
-                            if (phub4 != null)
-                            {
-                                phub4.ReferenceHub.characterClassManager.NetworkCurClass = (RoleType)urole.RoleID;
-                                Log.Info($"Changed fake player role ID: {urole.PlayerID}, RoleType: {(RoleType)urole.RoleID}.");
-                            }
+                            if (!replayPlayers.ContainsKey(urole.PlayerID))
+                                break;
+                            Log.Info($"Update role");
+                            replayPlayers[urole.PlayerID].UpdateRole(urole);
                             break;
                         case RecordEvents.UseLift:
                             stream.Position = oldPos;
@@ -326,32 +343,34 @@ namespace PlayerRecorder
                             foreach (var lift2 in Map.Lifts)
                                 if (lift2.elevatorName == ulift.Elevatorname)
                                     lift2.UseLift();
+                            Log.Info($"Use lift");
                             break;
                         case RecordEvents.ShotWeapon:
                             stream.Position = oldPos;
                             var sweapon = MessagePack.MessagePackSerializer.Deserialize<ShotWeaponData>(stream);
-                            var phub5 = Player.Get(sweapon.PlayerID + 30);
-                            if (phub5 != null)
-                                phub5.ReferenceHub.weaponManager.RpcConfirmShot(false, (int)phub5.ReferenceHub.weaponManager.curWeapon);
+                            if (!replayPlayers.ContainsKey(sweapon.PlayerID))
+                                break;
+                            Log.Info($"Shot weapon");
+                            replayPlayers[sweapon.PlayerID].ShotWeapon();
                             break;
                         case RecordEvents.ReloadWeapon:
                             stream.Position = oldPos;
                             var rweapon = MessagePack.MessagePackSerializer.Deserialize<ReloadWeaponData>(stream);
-                            var phub6 = Player.Get(rweapon.PlayerID + 30);
-                            if (phub6 != null)
-                                phub6.ReferenceHub.weaponManager.RpcReload(phub6.ReferenceHub.weaponManager.curWeapon);
-                            break;
-                        case RecordEvents.RoundEnd:
-                            Map.Broadcast(10, "PlayerRecord | ROUND ENDED");
+                            if (!replayPlayers.ContainsKey(rweapon.PlayerID))
+                                break;
+                            Log.Info($"Reload weapon");
+                            replayPlayers[rweapon.PlayerID].ReloadWeapon();
                             break;
                         case RecordEvents.Delay:
                             stream.Position = oldPos;
                             var delay = MessagePack.MessagePackSerializer.Deserialize<DelayData>(stream);
-                            Log.Info($"Waiting {delay.DelayTime} seconds.");
+                            Log.Info($"Waiting {delay.DelayTime}");
+                            yield return Timing.WaitForSeconds(delay.DelayTime);
+                            break;
+                        case RecordEvents.RoundEnd:
+                            Map.Broadcast(10, "PlayerRecord | ROUND ENDED");
                             break;
                     }
-                    if (stream.Length == 0)
-                        break;
                 }
             }
             Log.Info("Replay ended");

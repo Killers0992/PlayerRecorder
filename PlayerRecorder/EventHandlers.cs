@@ -38,7 +38,13 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Server.RoundEnded += Server_RoundEnded;
             Exiled.Events.Handlers.Player.Verified += Player_Verified;
             Exiled.Events.Handlers.Map.SpawnedItem += Map_SpawnedItem;
+            Exiled.Events.Handlers.Server.RoundStarted += Server_RoundStarted;
             firstrun = true;
+        }
+
+        private void Server_RoundStarted()
+        {
+            waitingforplayers = false;
         }
 
         private void Player_Verified(Exiled.Events.EventArgs.VerifiedEventArgs ev)
@@ -209,22 +215,16 @@ namespace PlayerRecorder
                                 RecorderCore.isReplaying = false;
                                 RecorderCore.isReplayReady = false;
                                 core.SeedID = -1;
-                                foreach (var dummy in core.playerDb)
+                                foreach (var item in RecorderCore.replayPickups)
                                 {
-                                    var id = Player.Get(dummy.Value).Id;
-                                    Player.Dictionary.Remove(dummy.Value);
-                                    Player.IdsCache.Remove(id);
-                                    PlayerManager.RemovePlayer(dummy.Value);
-                                    NetworkServer.Destroy(dummy.Value);
-                                    core.playerDb.Remove(dummy.Key);
-                                    NetworkServer.Destroy(dummy.Value);
+                                    NetworkServer.Destroy(item.Value.gameObject);
                                 }
-                                foreach (var dummyItem in core.itemData)
+                                RecorderCore.replayPickups.Clear();
+                                foreach (var player in RecorderCore.replayPlayers)
                                 {
-                                    NetworkServer.Destroy(dummyItem.Value.gameObject);
+                                    NetworkServer.Destroy(player.Value.gameObject);
                                 }
-                                core.playerDb = new Dictionary<string, GameObject>();
-                                core.itemData = new Dictionary<int, Pickup>();
+                                RecorderCore.replayPlayers.Clear();
                                 ev.Sender.RemoteAdminMessage("Replay ended.", true, "PlayerRecorder");
 
                             }
@@ -256,9 +256,6 @@ namespace PlayerRecorder
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
-            core.playerData = new List<string>();
-            core.itemData = new Dictionary<int, Pickup>();
-            core.playerDb = new Dictionary<string, GameObject>();
             if (RecorderCore.isReplayReady)
                 return;
             core.StartRecording();

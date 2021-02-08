@@ -5,9 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-
+using Evs = Exiled.Events;
 namespace PlayerRecorder
 {
     public class MainClass : Plugin<PluginConfig>
@@ -25,6 +26,14 @@ namespace PlayerRecorder
 
         public override void OnEnabled()
         {
+            foreach (MethodBase bas in Evs.Events.Instance.Harmony.GetPatchedMethods())
+            {
+                if (bas.Name.Equals("TransmitData"))
+                {
+                    Exiled.Events.Events.DisabledPatchesHashSet.Add(bas);
+                }
+            }
+            Evs.Events.Instance.ReloadDisabledPatches();
             pluginDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "Plugins", "PlayerRecorder");
             if (!Directory.Exists(pluginDir))
                 Directory.CreateDirectory(pluginDir);

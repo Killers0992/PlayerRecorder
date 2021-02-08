@@ -22,13 +22,13 @@ namespace PlayerRecorder
             this.pickup = GetComponent<Pickup>();
             for (int i = 1; i < int.MaxValue; i++)
             {
-                if (RecorderCore.singleton.itemData.Keys.Any(p => p == i))
+                if (RecorderCore.recordPickups.Keys.Any(p => p == i))
                     continue;
 
                 uniqueId = i;
                 break;
             }
-            RecorderCore.singleton.itemData.Add(uniqueId, this.pickup);
+            RecorderCore.recordPickups.Add(uniqueId, this);
             RecorderCore.OnReceiveEvent(new CreatePickupData()
             {
                 ItemID = uniqueId,
@@ -61,12 +61,12 @@ namespace PlayerRecorder
         void OnDestroy()
         {
             Log.Info($"Pickup record destroy for {pickup.ItemId} ({uniqueId})");
-            RecorderCore.singleton.itemData.Remove(uniqueId);
-            RecorderCore.OnUnRegisterRecordPickup(this);
+            RecorderCore.recordPickups.Remove(uniqueId);
             RecorderCore.OnReceiveEvent(new RemovePickupData()
             {
                 ItemID = uniqueId
             });
+            RecorderCore.OnUnRegisterRecordPickup(this);
         }
     }
 }
