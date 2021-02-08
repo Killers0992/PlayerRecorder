@@ -11,19 +11,35 @@ namespace PlayerRecorder
 {
     public class ReplayPlayer : MonoBehaviour
     {
-        public ReferenceHub hub;
+        ReferenceHub _hub;
+        public ReferenceHub hub
+        {
+            get
+            {
+                if (_hub == null)
+                    _hub = GetComponent<ReferenceHub>();
+                return _hub;
+            }
+        }
+
+        public Player player;
         public int uniqueId = 0;
+
+        public void Init()
+        {
+            Log.Info($"Player replay init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
+        }
 
         void Start()
         {
-            this.hub = GetComponent<ReferenceHub>();
-            PlayerManager.AddPlayer(gameObject);
-            Log.Info($"Player replay init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
+            PlayerManager.AddPlayer(transform.gameObject);
             RecorderCore.OnRegisterReplayPlayer(this);
         }
 
         public void UpdatePlayer(UpdatePlayerData e)
         {
+            if (uniqueId == 0)
+                return;
             hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
             hub.animationController.NetworkcurAnim = e.CurrentAnim;
             hub.animationController.Networkspeed = e.Speed.SetVector();
@@ -34,25 +50,29 @@ namespace PlayerRecorder
 
         public void UpdateRole(UpdateRoleData e)
         {
+            if (uniqueId == 0)
+                return;
             hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
             Log.Info($"Changed fake player role ID: {e.PlayerID}, RoleType: {(RoleType)e.RoleID}.");
         }
 
         public void ShotWeapon()
         {
+            if (uniqueId == 0)
+                return;
             hub.weaponManager.RpcConfirmShot(false, (int)hub.weaponManager.curWeapon);
         }
 
         public void ReloadWeapon()
         {
+            if (uniqueId == 0)
+                return;
             hub.weaponManager.RpcReload(hub.weaponManager.curWeapon);
         }
 
         void OnDestroy()
         {
-            Player.Dictionary.Remove(gameObject);
-            PlayerManager.RemovePlayer(gameObject);
-            Player.IdsCache.Remove(hub.queryProcessor.NetworkPlayerId);
+            PlayerManager.RemovePlayer(transform.gameObject);
             RecorderCore.replayPlayers.Remove(uniqueId);
             Log.Info($"Player replay destroy for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecorderCore.OnUnRegisterReplayPlayer(this);

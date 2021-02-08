@@ -11,7 +11,16 @@ namespace PlayerRecorder
 {
     public class RecordPickup : MonoBehaviour
     {
-        public Pickup pickup;
+        Pickup _pickup;
+        public Pickup pickup
+        {
+            get
+            {
+                if (_pickup == null)
+                    _pickup = GetComponent<Pickup>();
+                return _pickup;
+            }
+        }
         public Vector3 currentPosition = new Vector3(0f, 0f, 0f);
         public Quaternion currentRotation = new Quaternion(0f, 0f,0f,0f);
 
@@ -19,7 +28,6 @@ namespace PlayerRecorder
 
         void Start()
         {
-            this.pickup = GetComponent<Pickup>();
             for (int i = 1; i < int.MaxValue; i++)
             {
                 if (RecorderCore.recordPickups.Keys.Any(p => p == i))

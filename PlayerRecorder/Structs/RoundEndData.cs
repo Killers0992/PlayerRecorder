@@ -9,9 +9,7 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class RoundEndData
+    public class RoundEndData : IEventType
     {
-        [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.RoundEnd;
     }
 }

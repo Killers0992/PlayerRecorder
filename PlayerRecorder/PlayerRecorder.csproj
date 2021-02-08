@@ -74,8 +74,8 @@
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
-    <Reference Include="Mirror">
-      <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\Mirror.dll</HintPath>
+    <Reference Include="Mirror_publicized">
+      <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\publicized_assemblies\Mirror_publicized.dll</HintPath>
     </Reference>
     <Reference Include="NorthwoodLib">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\NorthwoodLib.dll</HintPath>
@@ -123,13 +123,14 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="MainClass.cs" />
     <Compile Include="Patches\GhostModePatch.cs" />
+    <Compile Include="Patches\MirrorPatch.cs" />
     <Compile Include="RecordPickup.cs" />
     <Compile Include="RecordPlayer.cs" />
     <Compile Include="ReplayPickup.cs" />
     <Compile Include="ReplayPlayer.cs" />
     <Compile Include="Structs\DoorData.cs" />
     <Compile Include="Structs\DelayData.cs" />
-    <Compile Include="Structs\InvokeEvent.cs" />
+    <Compile Include="Structs\IEventType.cs" />
     <Compile Include="Structs\LeaveData.cs" />
     <Compile Include="Structs\LiftData.cs" />
     <Compile Include="Structs\CreatePickupData.cs" />

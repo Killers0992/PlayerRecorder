@@ -32,6 +32,7 @@ namespace PlayerRecorder.Structs
         {
             return new Quaternion(x, y,z,w);
         }
+
         [IgnoreMember]
         public Quaternion quaternion;
     }

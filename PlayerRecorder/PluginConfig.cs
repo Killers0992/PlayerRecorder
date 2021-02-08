@@ -12,5 +12,6 @@ namespace PlayerRecorder
         public bool IsEnabled { get; set; } = true;
         public float recordDelay { get; set; } = 0.1f;
         public float replayDelay { get; set; } = 0.1f;
+        public bool debug { get; set; } = false;
     }
 }

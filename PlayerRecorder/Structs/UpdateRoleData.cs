@@ -9,13 +9,11 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class UpdateRoleData
+    public class UpdateRoleData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.UpdateRole;
-        [Key(1)]
         public sbyte PlayerID { get; set; }
-        [Key(2)]
+        [Key(1)]
         public sbyte RoleID { get; set; }
     }
 }

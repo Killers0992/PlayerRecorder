@@ -11,20 +11,32 @@ namespace PlayerRecorder
 {
     public class ReplayPickup : MonoBehaviour
     {
-        public Pickup pickup;
+        Pickup _pickup;
+        public Pickup pickup
+        {
+            get
+            {
+                if (_pickup == null)
+                    _pickup = GetComponent<Pickup>();
+                return _pickup;
+            }
+        }
 
         public int uniqueId = 0;
 
+        public void Init()
+        {
+            Log.Info($"Pickup replay init for {pickup.ItemId} ({uniqueId})");
+        }
+
         void Start()
         {
-            this.pickup = GetComponent<Pickup>();
-            Log.Info($"Pickup replay init for {pickup.ItemId} ({uniqueId})");
             RecorderCore.OnRegisterReplayPickup(this);
         }
 
         public void UpdatePickup(UpdatePickupData e)
         {
-            if (pickup == null)
+            if (pickup == null || uniqueId == 0)
                 return;
             pickup.Networkposition = e.Position.SetVector();
             pickup.Networkrotation = e.Rotation.SetQuaternion();

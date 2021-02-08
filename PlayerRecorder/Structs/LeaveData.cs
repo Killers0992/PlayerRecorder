@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class LeaveData
+    public class LeaveData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.PlayerLeave;
-        [Key(1)]
         public sbyte PlayerID { get; set; }
     }
 }

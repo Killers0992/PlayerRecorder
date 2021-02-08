@@ -10,13 +10,11 @@ using UnityEngine;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class DoorData
+    public class DoorData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.DoorState;
-        [Key(1)]
         public bool State { get; set; }
-        [Key(2)]
+        [Key(1)]
         public Vector3Data Position { get; set; }
     }
 }

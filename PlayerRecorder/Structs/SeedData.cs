@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class SeedData
+    public class SeedData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.ReceiveSeed;
-        [Key(1)]
         public int Seed { get; set; }
     }
 }

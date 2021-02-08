@@ -10,17 +10,15 @@ using UnityEngine;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class CreatePickupData
+    public class CreatePickupData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.CreatePickup;
-        [Key(1)]
         public int ItemID { get; set; }
-        [Key(2)]
+        [Key(1)]
         public int ItemType { get; set; }
-        [Key(3)]
+        [Key(2)]
         public Vector3Data Position { get; set; }
-        [Key(4)]
+        [Key(3)]
         public QuaternionData Rotation { get; set; }
     }
 }

@@ -11,13 +11,22 @@ namespace PlayerRecorder
 {
     public class RecordPlayer : MonoBehaviour
     {
-        public ReferenceHub hub;
+        ReferenceHub _hub;
+        public ReferenceHub hub
+        {
+            get
+            {
+                if (_hub == null)
+                    _hub = GetComponent<ReferenceHub>();
+                return _hub;
+            }
+        }
+
         public Vector3 currentPosition = new Vector3(0f,0f,0f);
         public Vector2 currentRotation = new Vector2(0f,0f);
 
         void Start() 
         { 
-            this.hub = GetComponent<ReferenceHub>();
             Log.Info($"Player record init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecorderCore.OnReceiveEvent(new PlayerInfoData()
             {

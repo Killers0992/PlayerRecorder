@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PlayerRecorder.Enums
 {
-    public enum RecordEvents : byte
+    public enum RecordEvents : int
     {
         PlayerInfo,
         PlayerLeave,

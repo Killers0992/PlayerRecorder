@@ -9,15 +9,13 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class PlayerInfoData
+    public class PlayerInfoData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.PlayerInfo;
-        [Key(1)]
         public sbyte PlayerID { get; set; }
-        [Key(2)]
+        [Key(1)]
         public string UserName { get; set; }
-        [Key(3)]
+        [Key(2)]
         public string UserID { get; set; }
     }
 }

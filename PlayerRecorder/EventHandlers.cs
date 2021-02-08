@@ -35,7 +35,6 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.Died += Player_Died;
             Exiled.Events.Handlers.Player.Shot += Player_Shot;
             Exiled.Events.Handlers.Player.ReloadingWeapon += Player_ReloadingWeapon;
-            Exiled.Events.Handlers.Server.RoundEnded += Server_RoundEnded;
             Exiled.Events.Handlers.Player.Verified += Player_Verified;
             Exiled.Events.Handlers.Map.SpawnedItem += Map_SpawnedItem;
             Exiled.Events.Handlers.Server.RoundStarted += Server_RoundStarted;
@@ -59,11 +58,6 @@ namespace PlayerRecorder
             if (!RecorderCore.isRecording)
                 return;
             ev.Pickup.gameObject.AddComponent<RecordPickup>();
-        }
-
-        private void Server_RoundEnded(Exiled.Events.EventArgs.RoundEndedEventArgs ev)
-        {
-            core.endInstance = true;
         }
 
         private void Player_ReloadingWeapon(Exiled.Events.EventArgs.ReloadingWeaponEventArgs ev)
@@ -243,24 +237,12 @@ namespace PlayerRecorder
         {
             waitingforplayers = false;
             RecorderCore.isRecording = false;
-            core.endInstance = false;
-            if (replayHandler != null)
+            if (replayHandler != null && !RecorderCore.isReplayReady)
                 Timing.KillCoroutines(replayHandler);
-            if (RecorderCore.singleton.recordingStream != null)
-            {
-                RecorderCore.singleton.recordingStream.Close();
-                RecorderCore.singleton.recordingStream.Dispose();
-                RecorderCore.singleton.recordingStream = null;
-            }
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
-            if (RecorderCore.isReplayReady)
-                return;
-            core.StartRecording();
-            RecorderCore.isRecording = true;
-            Log.Info("New recorder instance created.");
         }
 
 
@@ -288,7 +270,17 @@ namespace PlayerRecorder
             if (firstrun)
             {
                 firstrun = false;
-                Server_RestartingRound1();
+                if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
+                    Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
+                if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
+                    Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
+            }
+            if (RecorderCore.singleton.recordingStream != null)
+            {
+                RecorderCore.singleton.recordingStream.Close();
+                RecorderCore.singleton.recordingStream.Dispose();
+                RecorderCore.singleton.recordingStream = null;
+                RecorderCore.recordPickups.Clear();
             }
             if (RecorderCore.isReplayReady)
             {
@@ -299,9 +291,14 @@ namespace PlayerRecorder
                 }
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
+                RecorderCore.replayPickups.Clear();
+                RecorderCore.replayPlayers.Clear();
             }
-            else if (RecorderCore.isRecording)
+            else
             {
+                core.StartRecording();
+                RecorderCore.isRecording = true;
+                Log.Info("New recorder instance created.");
                 foreach (var pickup in UnityEngine.Object.FindObjectsOfType<Pickup>())
                 {
                     pickup.gameObject.AddComponent<RecordPickup>();
@@ -309,7 +306,5 @@ namespace PlayerRecorder
             }
             waitingforplayers = true;
         }
-
-
     }
 }

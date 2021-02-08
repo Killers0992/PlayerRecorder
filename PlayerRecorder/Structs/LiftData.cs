@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class LiftData
+    public class LiftData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.UseLift;
-        [Key(1)]
         public string Elevatorname { get; set; }
     }
 }

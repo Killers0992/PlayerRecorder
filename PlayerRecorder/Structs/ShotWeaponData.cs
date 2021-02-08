@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class ShotWeaponData
+    public class ShotWeaponData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.ShotWeapon;
-        [Key(1)]
         public sbyte PlayerID { get; set; }
     }
 }

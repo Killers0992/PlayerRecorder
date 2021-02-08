@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [MessagePackObject]
-    public class RemovePickupData
+    public class RemovePickupData : IEventType
     {
         [Key(0)]
-        public byte EventID { get; set; } = (byte)RecordEvents.RemovePickup;
-        [Key(1)]
         public int ItemID { get; set; }
     }
 }
