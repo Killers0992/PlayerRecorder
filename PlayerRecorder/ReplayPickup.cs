@@ -24,7 +24,7 @@ namespace PlayerRecorder
 
         public int uniqueId = 0;
 
-        void Start()
+        void Awake()
         {
             Log.Info($"Pickup replay init for {pickup.ItemId}");
             RecorderCore.OnRegisterReplayPickup(this);

@@ -25,9 +25,8 @@ namespace PlayerRecorder
         public Player player;
         public int uniqueId = 0;
 
-        void Start()
+        void Awake()
         {
-            PlayerManager.AddPlayer(transform.gameObject);
             Log.Info($"Player replay init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecorderCore.OnRegisterReplayPlayer(this);
         }

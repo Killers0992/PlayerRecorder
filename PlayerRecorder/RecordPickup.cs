@@ -26,7 +26,7 @@ namespace PlayerRecorder
 
         public int uniqueId = 0;
 
-        void Start()
+        void Awake()
         {
             for (int i = 1; i < int.MaxValue; i++)
             {

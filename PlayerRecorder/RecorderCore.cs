@@ -130,10 +130,12 @@ namespace PlayerRecorder
                     return;
                 ccm.CurClass = RoleType;
                 obj.GetComponent<NicknameSync>().Network_myNickSync = string.IsNullOrEmpty(name) ? "[REC] Unknown name" :  $"[REC] {name}";
-                obj.GetComponent<QueryProcessor>().NetworkPlayerId = QueryProcessor._idIterator++;
-                obj.GetComponent<QueryProcessor>()._ipAddress = "127.0.0.WAN";
+                var qp = obj.GetComponent<QueryProcessor>();
+                qp.NetworkPlayerId = QueryProcessor._idIterator++;
+                qp._ipAddress = "127.0.0.WAN";
                 obj.transform.position = new Vector3(0f, 0f, 0f);
                 NetworkServer.Spawn(obj);
+                PlayerManager.AddPlayer(obj);
                 var rplayer = obj.AddComponent<ReplayPlayer>();
                 rplayer.uniqueId = clientid;
                 replayPlayers.Add(clientid, rplayer);

@@ -25,7 +25,7 @@ namespace PlayerRecorder
         public Vector3 currentPosition = new Vector3(0f,0f,0f);
         public Vector2 currentRotation = new Vector2(0f,0f);
 
-        void Start() 
+        void Awake() 
         { 
             Log.Info($"Player record init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecorderCore.OnReceiveEvent(new PlayerInfoData()
