@@ -124,6 +124,7 @@
     <Compile Include="MainClass.cs" />
     <Compile Include="Patches\GhostModePatch.cs" />
     <Compile Include="Patches\MirrorPatch.cs" />
+    <Compile Include="Patches\ScalePositionFix.cs" />
     <Compile Include="RecordPickup.cs" />
     <Compile Include="RecordPlayer.cs" />
     <Compile Include="ReplayPickup.cs" />

@@ -25,14 +25,10 @@ namespace PlayerRecorder
         public Player player;
         public int uniqueId = 0;
 
-        public void Init()
-        {
-            Log.Info($"Player replay init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-        }
-
         void Start()
         {
             PlayerManager.AddPlayer(transform.gameObject);
+            Log.Info($"Player replay init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecorderCore.OnRegisterReplayPlayer(this);
         }
 
@@ -40,6 +36,7 @@ namespace PlayerRecorder
         {
             if (uniqueId == 0)
                 return;
+            Log.Info("set player pos to " + e.Position.SetVector().ToString());
             hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
             hub.animationController.NetworkcurAnim = e.CurrentAnim;
             hub.animationController.Networkspeed = e.Speed.SetVector();
