@@ -43,7 +43,7 @@ internal class GhostModePatch
 
             foreach (GameObject gameObject in players)
             {
-                if (RecorderCore.replayPlayers.Values.Any(p => p.gameObject == gameObject))
+                if (gameObject.GetComponent<ReplayPlayer>() != null)
                 {
                     continue;
                 }

@@ -15,7 +15,7 @@ namespace PlayerRecorder.Patches
     {
         private static bool Prefix(PlayerMovementSync __instance, Vector3 pos, float rot, bool forceGround)
         {
-            if (!RecorderCore.replayPlayers.Values.Any(p => p.gameObject == __instance.gameObject))
+            if (__instance.gameObject.GetComponent<ReplayPlayer>() == null)
             {
                 return true;
             }
