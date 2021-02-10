@@ -26,9 +26,9 @@ namespace PlayerRecorder.Structs
             this.z = z;
         }
 
-        public Vector3 SetVector()
+        public void SetVector()
         {
-            return new Vector3(x, y, z);
+            vector = new Vector3(x, y, z);
         }
 
         [IgnoreMember]

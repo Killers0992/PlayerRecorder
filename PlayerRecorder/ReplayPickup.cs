@@ -35,8 +35,8 @@ namespace PlayerRecorder
         {
             if (pickup == null || uniqueId == 0)
                 return;
-            pickup.Networkposition = e.Position.SetVector();
-            pickup.Networkrotation = e.Rotation.SetQuaternion();
+            pickup.Networkposition = e.Position.vector;
+            pickup.Networkrotation = e.Rotation.quaternion;
             if (pickup.NetworkitemId != (ItemType)e.ItemType)
                 pickup.NetworkitemId = (ItemType)e.ItemType;
         }

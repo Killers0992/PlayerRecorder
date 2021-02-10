@@ -22,9 +22,9 @@ namespace PlayerRecorder.Structs
             this.x = x;
             this.y = y;
         }
-        public Vector2 SetVector()
+        public void SetVector()
         {
-            return new Vector2(x, y);
+            vector = new Vector2(x, y);
         }
         [IgnoreMember]
         public Vector2 vector;

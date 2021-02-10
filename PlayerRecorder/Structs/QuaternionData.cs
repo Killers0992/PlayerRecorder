@@ -28,9 +28,9 @@ namespace PlayerRecorder.Structs
             this.z = z;
             this.w = w;
         }
-        public Quaternion SetQuaternion()
+        public void SetQuaternion()
         {
-            return new Quaternion(x, y,z,w);
+            quaternion = new Quaternion(x, y,z,w);
         }
 
         [IgnoreMember]

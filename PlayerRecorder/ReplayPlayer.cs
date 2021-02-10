@@ -38,13 +38,13 @@ namespace PlayerRecorder
                 return;
             hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
             hub.animationController.NetworkcurAnim = e.CurrentAnim;
-            hub.animationController.Networkspeed = e.Speed.SetVector();
+            hub.animationController.Networkspeed = e.Speed.vector;
             hub.animationController.Network_curMoveState = e.MoveState;
             try
             {
-                hub.playerMovementSync.OverridePosition(e.Position.SetVector(), hub.transform.rotation.eulerAngles.y);
+                hub.playerMovementSync.OverridePosition(e.Position.vector, hub.transform.rotation.eulerAngles.y);
             }catch (NullReferenceException) { }
-            hub.playerMovementSync.RotationSync = e.Rotation.SetVector();
+            hub.playerMovementSync.RotationSync = e.Rotation.vector;
         }
 
         public void UpdateRole(UpdateRoleData e)

@@ -3,18 +3,21 @@ using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
+using MessagePack;
 using Mirror;
 using Mirror.LiteNetLib4Mirror;
 using PlayerRecorder.Enums;
 using PlayerRecorder.Structs;
 using RemoteAdmin;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -178,14 +181,30 @@ namespace PlayerRecorder
 
         public bool currentStatus = false;
 
+        static async Task<List<T>> DeserializeListFromStreamAsync<T>(Stream stream, CancellationToken cancellationToken)
+        {
+            var dataStructures = new List<T>();
+            using (var streamReader = new MessagePackStreamReader(stream))
+            {
+                while (await streamReader.ReadAsync(cancellationToken) is ReadOnlySequence<byte> msgpack)
+                {
+                    dataStructures.Add(MessagePackSerializer.Deserialize<T>(msgpack, cancellationToken: cancellationToken));
+                }
+            }
+
+            return dataStructures;
+        }
+
         public List<IEventType> replayEvents = new List<IEventType>();
         public IEnumerator<float> Replay(string path)
         {
             replayEvents.Clear();
             isReplaying = false;
-            using (var stream = new FileStream(path, FileMode.Open))
+            int cur = 0;
+            using (var stream = new MemoryStream(File.ReadAllBytes(path)))
             {
-
+                Stopwatch watcher = new Stopwatch();
+                watcher.Start();
                 while (true)
                 {
                     if (isReplayPaused || (!isReplaying && isReplayReady))
@@ -201,109 +220,146 @@ namespace PlayerRecorder
                     catch (Exception ex)
                     {
                         Log.Info(ex.ToString());
+                        isReplayReady = true;
+                        ReferenceHub.HostHub.playerStats.Roundrestart();
                         break;
                     }
 
+                    cur++;
+                    if (cur == 100)
+                    {
+                        Log.Info("100 events in " + watcher.ElapsedMilliseconds + "ms");
+                        watcher.Restart();
+                        cur = 0;
+                    }
                     switch (data)
                     {
-                        case DelayData delay:
-                            yield return Timing.WaitForSeconds(delay.DelayTime);
-                            break;
                         case SeedData seed:
                             LogData($"Received seed {seed.Seed}");
                             RecorderCore.singleton.SeedID = seed.Seed;
-                            isReplayReady = true;
-                            ReferenceHub.HostHub.playerStats.Roundrestart();
-                            break;
-                        case PlayerInfoData pinfo:
-                            LogData($"Player joined {pinfo.UserName} ({pinfo.UserID}) ({pinfo.PlayerID})");
-                            CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID, RoleType.Spectator);
-                            break;
-                        case CreatePickupData cpickup:
-                            LogData($"Create pickup {(ItemType)cpickup.ItemType}");
-                            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
-                            NetworkServer.Spawn(gameObject);
-                            gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.SetVector(), Quaternion.Euler(new Vector3(0, 0, 0)));
-                            var rpickup = gameObject.AddComponent<ReplayPickup>();
-                            rpickup.uniqueId = cpickup.ItemID;
-                            replayPickups.Add(cpickup.ItemID, rpickup);
                             break;
                         case UpdatePlayerData uplayer:
-                            LogData($"Update player {uplayer.PlayerID}");
-                            if (!replayPlayers.ContainsKey(uplayer.PlayerID))
-                                break;
-                            replayPlayers[uplayer.PlayerID].UpdatePlayer(uplayer);
+                            uplayer.Speed.SetVector();
+                            uplayer.Rotation.SetVector();
+                            uplayer.Position.SetVector();
+                            replayEvents.Add(uplayer);
                             break;
                         case UpdatePickupData upickup:
-                            LogData($"Update pickup {upickup.ItemID}");
-                            if (!replayPickups.ContainsKey(upickup.ItemID))
-                                break;
-                            replayPickups[upickup.ItemID].UpdatePickup(upickup);
+                            upickup.Position.SetVector();
+                            upickup.Rotation.SetQuaternion();
+                            replayEvents.Add(upickup);
                             break;
-                        case LeaveData lplayer:
-                            LogData($"Player leave {lplayer.PlayerID}");
-                            if (!replayPlayers.ContainsKey(lplayer.PlayerID))
-                                break;
-                            var rplayer = replayPlayers[lplayer.PlayerID];
-                            NetworkServer.Destroy(rplayer.gameObject);
-                            break;
-                        case RemovePickupData rppickup:
-                            LogData($"Pickup remove {rppickup.ItemID}");
-                            if (!replayPickups.ContainsKey(rppickup.ItemID))
-                                break;
-                            var rrpickup = replayPickups[rppickup.ItemID];
-                            NetworkServer.Destroy(rrpickup.gameObject);
+                        case CreatePickupData cpickup:
+                            cpickup.Position.SetVector();
+                            cpickup.Rotation.SetQuaternion();
+                            replayEvents.Add(cpickup);
                             break;
                         case DoorData ddata:
-                            LogData($"Open door");
-                            var doorpos = ddata.Position.SetVector();
-
-                            DoorVariant bestDoor = null;
-                            float bestDistance = 999f;
-                            foreach (var dor in Map.Doors)
-                            {
-                                float distance = Vector3.Distance(dor.transform.position, doorpos);
-                                if (distance < bestDistance)
-                                {
-                                    bestDoor = dor;
-                                    bestDistance = distance;
-                                }
-                            }
-                            if (bestDoor != null)
-                            {
-                                bestDoor.TargetState = ddata.State;
-                            }
+                            ddata.Position.SetVector();
+                            replayEvents.Add(ddata);
                             break;
-                        case UpdateRoleData urole:
-                            LogData($"Update role {(RoleType)urole.RoleID} for player {urole.PlayerID}");
-                            if (!replayPlayers.ContainsKey(urole.PlayerID))
-                                break;
-                            replayPlayers[urole.PlayerID].UpdateRole(urole);
-                            break;
-                        case LiftData ulift:
-                            LogData($"Use lift");
-                            foreach (var lift2 in Map.Lifts)
-                                if (lift2.elevatorName == ulift.Elevatorname)
-                                    lift2.UseLift();
-                            break;
-                        case ShotWeaponData sweapon:
-                            LogData($"Shot weapon {sweapon.PlayerID}");
-                            if (!replayPlayers.ContainsKey(sweapon.PlayerID))
-                                break;
-                            replayPlayers[sweapon.PlayerID].ShotWeapon();
-                            break;
-                        case ReloadWeaponData rweapon:
-                            LogData($"Reload weapon {rweapon.PlayerID}");
-                            if (!replayPlayers.ContainsKey(rweapon.PlayerID))
-                                break;
-                            replayPlayers[rweapon.PlayerID].ReloadWeapon();
-                            break;
-                        case RoundEndData end:
-                            LogData($"Round ended");
+                        default:
+                            replayEvents.Add(data);
                             break;
                     }
                 }
             }
+            foreach(var data in replayEvents)
+            {
+                switch (data)
+                {
+                    case DelayData delay:
+                        yield return Timing.WaitForSeconds(delay.DelayTime);
+                        break;
+                    case PlayerInfoData pinfo:
+                        LogData($"Player joined {pinfo.UserName} ({pinfo.UserID}) ({pinfo.PlayerID})");
+                        CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID, RoleType.Spectator);
+                        break;
+                    case CreatePickupData cpickup:
+                        LogData($"Create pickup {(ItemType)cpickup.ItemType}");
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
+                        NetworkServer.Spawn(gameObject);
+                        gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.vector, Quaternion.Euler(new Vector3(0, 0, 0)));
+                        var rpickup = gameObject.AddComponent<ReplayPickup>();
+                        rpickup.uniqueId = cpickup.ItemID;
+                        replayPickups.Add(cpickup.ItemID, rpickup);
+                        break;
+                    case UpdatePlayerData uplayer:
+                        LogData($"Update player {uplayer.PlayerID}");
+                        if (!replayPlayers.ContainsKey(uplayer.PlayerID))
+                            break;
+                        replayPlayers[uplayer.PlayerID].UpdatePlayer(uplayer);
+                        break;
+                    case UpdatePickupData upickup:
+                        LogData($"Update pickup {upickup.ItemID}");
+                        if (!replayPickups.ContainsKey(upickup.ItemID))
+                            break;
+                        replayPickups[upickup.ItemID].UpdatePickup(upickup);
+                        break;
+                    case LeaveData lplayer:
+                        LogData($"Player leave {lplayer.PlayerID}");
+                        if (!replayPlayers.ContainsKey(lplayer.PlayerID))
+                            break;
+                        var rplayer = replayPlayers[lplayer.PlayerID];
+                        NetworkServer.Destroy(rplayer.gameObject);
+                        break;
+                    case RemovePickupData rppickup:
+                        LogData($"Pickup remove {rppickup.ItemID}");
+                        if (!replayPickups.ContainsKey(rppickup.ItemID))
+                            break;
+                        var rrpickup = replayPickups[rppickup.ItemID];
+                        NetworkServer.Destroy(rrpickup.gameObject);
+                        break;
+                    case DoorData ddata:
+                        LogData($"Open door");
+                        var doorpos = ddata.Position.vector;
+
+                        DoorVariant bestDoor = null;
+                        float bestDistance = 999f;
+                        foreach (var dor in Map.Doors)
+                        {
+                            float distance = Vector3.Distance(dor.transform.position, doorpos);
+                            if (distance < bestDistance)
+                            {
+                                bestDoor = dor;
+                                bestDistance = distance;
+                            }
+                        }
+                        if (bestDoor != null)
+                        {
+                            bestDoor.TargetState = ddata.State;
+                        }
+                        break;
+                    case UpdateRoleData urole:
+                        LogData($"Update role {(RoleType)urole.RoleID} for player {urole.PlayerID}");
+                        if (!replayPlayers.ContainsKey(urole.PlayerID))
+                            break;
+                        replayPlayers[urole.PlayerID].UpdateRole(urole);
+                        break;
+                    case LiftData ulift:
+                        LogData($"Use lift");
+                        foreach (var lift2 in Map.Lifts)
+                            if (lift2.elevatorName == ulift.Elevatorname)
+                                lift2.UseLift();
+                        break;
+                    case ShotWeaponData sweapon:
+                        LogData($"Shot weapon {sweapon.PlayerID}");
+                        if (!replayPlayers.ContainsKey(sweapon.PlayerID))
+                            break;
+                        replayPlayers[sweapon.PlayerID].ShotWeapon();
+                        break;
+                    case ReloadWeaponData rweapon:
+                        LogData($"Reload weapon {rweapon.PlayerID}");
+                        if (!replayPlayers.ContainsKey(rweapon.PlayerID))
+                            break;
+                        replayPlayers[rweapon.PlayerID].ReloadWeapon();
+                        break;
+                    case RoundEndData end:
+                        LogData($"Round ended");
+                        break;
+                }
+            }
+            replayEvents.Clear();
             Log.Info("Replay ended");
             yield break;
         }
