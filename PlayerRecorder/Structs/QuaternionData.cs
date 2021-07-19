@@ -16,8 +16,17 @@ namespace PlayerRecorder.Structs
         [ProtoMember(4)]
         public float w { get; set; }
 
-
         [ProtoIgnore]
-        public Quaternion quaternion => new Quaternion(x,y,z,w);
+        private Quaternion _quat;
+        [ProtoIgnore]
+        public Quaternion quaternion
+        {
+            get
+            {
+                if (_quat == null)
+                    _quat = new Quaternion(x, y, z, w);
+                return _quat;
+            }
+        }
     }
 }

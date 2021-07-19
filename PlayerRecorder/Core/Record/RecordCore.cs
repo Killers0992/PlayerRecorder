@@ -83,7 +83,7 @@ namespace PlayerRecorder.Core.Record
 
         void Update()
         {
-            if (MainClass.isRecording && !EventHandlers.waitingforplayers)
+            if (MainClass.isRecording)
                 MainClass.framer++;
         }
 

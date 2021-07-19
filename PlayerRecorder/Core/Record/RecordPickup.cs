@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder.Core.Record
+namespace PlayerRecorder.Core.Record 
 {
     public class RecordPickup : MonoBehaviour
     {

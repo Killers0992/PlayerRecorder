@@ -36,15 +36,22 @@ namespace PlayerRecorder.Core.Replay
         {
             if (uniqueId == 0)
                 return;
-            hub.animationController.NetworkcurAnim = e.CurrentAnim;
-            hub.animationController.Networkspeed = e.Speed.vector;
-            hub.animationController.Network_curMoveState = e.MoveState;
-            hub.playerMovementSync.RotationSync = e.Rotation.vector;
 
             try
             {
                 hub.playerMovementSync.OverridePosition(e.Position.vector, 0f, true);
-            }catch (NullReferenceException) { }
+            }
+            catch (NullReferenceException) { }
+            hub.playerMovementSync.RotationSync = e.Rotation.vector;
+
+            if (hub.animationController.NetworkcurAnim != e.CurrentAnim)
+                hub.animationController.NetworkcurAnim = e.CurrentAnim;
+            if (hub.animationController.Networkspeed != e.Speed.vector)
+                hub.animationController.Networkspeed = e.Speed.vector;
+            if (hub.animationController.Network_curMoveState != e.MoveState)
+                hub.animationController.Network_curMoveState = e.MoveState;
+            if (hub.characterClassManager.NetworkCurClass != (RoleType)e.RoleID)
+                hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
         }
 
         public void UpdateHoldingItem(UpdateHoldingItem e)

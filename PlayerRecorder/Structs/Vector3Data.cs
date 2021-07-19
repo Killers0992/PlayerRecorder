@@ -15,6 +15,17 @@ namespace PlayerRecorder.Structs
         public float z { get; set; }
 
         [ProtoIgnore]
-        public Vector3 vector => new Vector3(x,y,z);
+        private Vector3 _vec;
+
+        [ProtoIgnore]
+        public Vector3 vector
+        {
+            get
+            {
+                if (_vec == null)
+                    _vec = new Vector3(x, y, z);
+                return _vec;
+            }
+        }
     }
 }

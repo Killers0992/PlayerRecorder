@@ -13,6 +13,7 @@ namespace PlayerRecorder.Core.Record
     public class DoorRecord : MonoBehaviour
     {
         public bool IsOpen { get; set; } = false;
+        public ushort ActiveLocks { get; set; }
 
         DoorVariant _door;
         public DoorVariant door
@@ -29,12 +30,14 @@ namespace PlayerRecorder.Core.Record
         {
             if (!MainClass.isRecording)
                 return;
-            if (IsOpen != door.TargetState)
+            if (IsOpen != door.TargetState || ActiveLocks != door.NetworkActiveLocks)
             {
                 IsOpen = door.TargetState;
+                ActiveLocks = door.NetworkActiveLocks;
                 RecordCore.OnReceiveEvent(new DoorData()
                 {
                     State = IsOpen,
+                    ActiveLocks = ActiveLocks,
                     Position = new Vector3Data() { x = door.transform.position.x, y = door.transform.position.y, z = door.transform.position.z },
                 });
             }

@@ -13,10 +13,12 @@ namespace PlayerRecorder.Structs
         [ProtoMember(3)]
         public int CurrentAnim { get; set; }
         [ProtoMember(4)]
-        public Vector2Data Speed { get; set; }
+        public sbyte RoleID { get; set; }
         [ProtoMember(5)]
-        public Vector3Data Position { get; set; }
+        public Vector2Data Speed { get; set; }
         [ProtoMember(6)]
+        public Vector3Data Position { get; set; }
+        [ProtoMember(7)]
         public Vector2Data Rotation { get; set; }
     }
 }
