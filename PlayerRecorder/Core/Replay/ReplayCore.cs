@@ -33,6 +33,18 @@ namespace PlayerRecorder.Core.Replay
             }
         }
 
+        private WeaponManager _wmanager;
+
+        public WeaponManager WeaponManager
+        {
+            get
+            {
+                if (_wmanager == null)
+                    _wmanager = UnityEngine.Object.FindObjectsOfType<WeaponManager>()[0];
+                return _wmanager;
+            }
+        }
+
         void Start()
         {
             DontDestroyOnLoad(this);
@@ -244,6 +256,14 @@ namespace PlayerRecorder.Core.Replay
                                     AlphaWarheadController.Host.NetworksyncResumeScenario = warheadData.ResumeScenario;
                                     AlphaWarheadController.Host.NetworksyncStartScenario = warheadData.StartScenario;
                                     AlphaWarheadController.Host.NetworkinProgress = warheadData.InProgress;
+                                    continue;
+                                case ScpTerminationData scpterm:
+                                    var role = new Role();
+                                    role.fullName = scpterm.RoleFullName;
+                                    NineTailedFoxAnnouncer.AnnounceScpTermination(role, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(scpterm.ToolID), 0), scpterm.GroupID);
+                                    continue;
+                                case PlaceDecalData placeDecal:
+                                    WeaponManager.RpcPlaceDecal(placeDecal.IsBlood, placeDecal.Type, placeDecal.Position.vector, placeDecal.Rotation.quaternion);
                                     continue;
                                 case RoundEndData end:
                                     LogData($"Round ended");

@@ -134,11 +134,13 @@
     <Compile Include="Structs\LiftData.cs" />
     <Compile Include="Structs\CreatePickupData.cs" />
     <Compile Include="Structs\OpenCloseGeneratorData.cs" />
+    <Compile Include="Structs\PlaceDecalData.cs" />
     <Compile Include="Structs\PlayerInfoData.cs" />
     <Compile Include="Structs\QuaternionData.cs" />
     <Compile Include="Structs\ReloadWeaponData.cs" />
     <Compile Include="Structs\RemovePickupData.cs" />
     <Compile Include="Structs\RoundEndData.cs" />
+    <Compile Include="Structs\ScpTerminationData.cs" />
     <Compile Include="Structs\SeedData.cs" />
     <Compile Include="Structs\ShotWeaponData.cs" />
     <Compile Include="Structs\UnlockGeneratorData.cs" />

@@ -1,5 +1,6 @@
 ﻿using Exiled.API.Features;
 using Exiled.Events.EventArgs;
+using Interactables.Interobjects.DoorUtils;
 using MEC;
 using Mirror;
 using PlayerRecorder.Core.Record;
@@ -32,7 +33,48 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.ClosingGenerator += Player_ClosingGenerator;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting += Scp914_ChangingKnobSetting;
             Exiled.Events.Handlers.Player.Verified += Player_Verified;
+            Exiled.Events.Handlers.Map.PlacingDecal += Map_PlacingDecal;
+            Exiled.Events.Handlers.Map.PlacingBlood += Map_PlacingBlood;
+            Exiled.Events.Handlers.Map.AnnouncingScpTermination += Map_AnnouncingScpTermination;
             firstrun = true;
+        }
+
+        private void Map_PlacingBlood(PlacingBloodEventArgs ev)
+        {
+            if (!MainClass.isRecording)
+                return;
+            RecordCore.OnReceiveEvent(new PlaceDecalData()
+            {
+                IsBlood = true,
+                Type = (sbyte)ev.Type,
+                Position = new Vector3Data() { x = ev.Position.x, y = ev.Position.y, z = ev.Position.z },
+                Rotation = new QuaternionData() { x = 0f, y = 0f, z = 0f, w = 0f }
+            });
+        }
+
+        private void Map_PlacingDecal(PlacingDecalEventArgs ev)
+        {
+            if (!MainClass.isRecording)
+                return;
+            RecordCore.OnReceiveEvent(new PlaceDecalData()
+            {
+                IsBlood = false,
+                Type = (sbyte)ev.Type,
+                Position = new Vector3Data() { x = ev.Position.x, y = ev.Position.y, z = ev.Position.z},
+                Rotation = new QuaternionData() {  x = ev.Rotation.x, y = ev.Rotation.y, z = ev.Rotation.z, w = ev.Rotation.w}
+            });
+        }
+
+        private void Map_AnnouncingScpTermination(AnnouncingScpTerminationEventArgs ev)
+        {
+            if (!MainClass.isRecording)
+                return;
+            RecordCore.OnReceiveEvent(new ScpTerminationData()
+            {
+                RoleFullName = ev.Role.fullName,
+                ToolID = ev.HitInfo.Tool,
+                GroupID = ev.TerminationCause
+            });
         }
 
         private void Player_Verified(VerifiedEventArgs ev)
@@ -306,6 +348,10 @@ namespace PlayerRecorder
                 foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
                 {
                     gen.gameObject.AddComponent<GeneratorRecord>();
+                }
+                foreach (var door in UnityEngine.Object.FindObjectsOfType<DoorVariant>())
+                {
+                    door.gameObject.AddComponent<DoorRecord>();
                 }
                 AlphaWarheadController.Host.gameObject.AddComponent<WarheadRecord>();
             }

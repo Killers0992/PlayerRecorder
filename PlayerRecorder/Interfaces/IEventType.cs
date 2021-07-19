@@ -24,6 +24,8 @@ namespace PlayerRecorder.Interfaces
     [ProtoInclude(18, typeof(Change914KnobData))]
     [ProtoInclude(19, typeof(OpenCloseGeneratorData))]
     [ProtoInclude(20, typeof(UnlockGeneratorData))]
+    [ProtoInclude(21, typeof(ScpTerminationData))]
+    [ProtoInclude(22, typeof(PlaceDecalData))]
     public interface IEventType
     {
     }
