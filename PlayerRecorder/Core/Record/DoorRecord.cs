@@ -32,7 +32,7 @@ namespace PlayerRecorder.Core.Record
             if (IsOpen != door.TargetState)
             {
                 IsOpen = door.TargetState;
-                RecorderCore.OnReceiveEvent(new DoorData()
+                RecordCore.OnReceiveEvent(new DoorData()
                 {
                     State = IsOpen,
                     Position = new Vector3Data() { x = door.transform.position.x, y = door.transform.position.y, z = door.transform.position.z },

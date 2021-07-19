@@ -4,6 +4,7 @@ using MapGeneration;
 using MEC;
 using Mirror;
 using NPCS;
+using PlayerRecorder.Interfaces;
 using PlayerRecorder.Structs;
 using ProtoBuf;
 using System;

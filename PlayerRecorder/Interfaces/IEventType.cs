@@ -1,12 +1,7 @@
-﻿using PlayerRecorder.Enums;
+﻿using PlayerRecorder.Structs;
 using ProtoBuf;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace PlayerRecorder.Structs
+namespace PlayerRecorder.Interfaces
 {
     [ProtoContract]
     [ProtoInclude(1, typeof(CreatePickupData))]

@@ -117,7 +117,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Record\DoorRecord.cs" />
-    <Compile Include="Enums\RecordEvents.cs" />
     <Compile Include="EventHandlers.cs" />
     <Compile Include="Core\Record\GeneratorRecord.cs" />
     <Compile Include="MainClass.cs" />
@@ -129,9 +128,8 @@
     <Compile Include="Structs\Change914KnobData.cs" />
     <Compile Include="Structs\CreateRagdollData.cs" />
     <Compile Include="Structs\DoorData.cs" />
-    <Compile Include="Structs\DelayData.cs" />
     <Compile Include="Structs\GeneratorUpdateData.cs" />
-    <Compile Include="Structs\IEventType.cs" />
+    <Compile Include="Interfaces\IEventType.cs" />
     <Compile Include="Structs\LeaveData.cs" />
     <Compile Include="Structs\LiftData.cs" />
     <Compile Include="Structs\CreatePickupData.cs" />
@@ -151,7 +149,7 @@
     <Compile Include="Patches\SeedPatch.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Core\Record\RecorderCore.cs" />
+    <Compile Include="Core\Record\RecordCore.cs" />
     <Compile Include="Structs\Vector2Data.cs" />
     <Compile Include="Structs\Vector3Data.cs" />
     <Compile Include="Structs\WarheadUpdateData.cs" />

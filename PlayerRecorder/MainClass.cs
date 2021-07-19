@@ -1,6 +1,7 @@
 ﻿using Exiled.API.Features;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
+using PlayerRecorder.Interfaces;
 using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace PlayerRecorder
         public override string Name { get; } = "PlayerRecorder";
         public override string Prefix { get; } = "playerrecorder";
 
-        private RecorderCore core;
+        private RecordCore core;
         private ReplayCore core2;
         private EventHandlers eventHandlers;
 
@@ -32,7 +33,7 @@ namespace PlayerRecorder
             if (!Directory.Exists(pluginDir))
                 Directory.CreateDirectory(pluginDir);
             singleton = this;
-            core = CustomNetworkManager.singleton.gameObject.AddComponent<RecorderCore>();
+            core = CustomNetworkManager.singleton.gameObject.AddComponent<RecordCore>();
             core2 = CustomNetworkManager.singleton.gameObject.AddComponent<ReplayCore>();
             eventHandlers = new EventHandlers(core, core2);
             HarmonyLib.Harmony hrm = new HarmonyLib.Harmony("Patcher.recorder");

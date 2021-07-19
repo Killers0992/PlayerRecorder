@@ -30,7 +30,7 @@ namespace PlayerRecorder.Core.Record
         void Awake() 
         { 
             Log.Info($"Player record init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-            RecorderCore.OnReceiveEvent(new PlayerInfoData()
+            RecordCore.OnReceiveEvent(new PlayerInfoData()
             {
                 PlayerID = (sbyte)this.hub.queryProcessor.PlayerId,
                 UserID = this.hub.characterClassManager.UserId,
@@ -49,7 +49,7 @@ namespace PlayerRecorder.Core.Record
 
                 currentPosition = hub.transform.position;
                 currentRotation = hub.playerMovementSync.Rotations;
-                RecorderCore.OnReceiveEvent(new UpdatePlayerData()
+                RecordCore.OnReceiveEvent(new UpdatePlayerData()
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
                     MoveState = (byte)hub.animationController.Network_curMoveState,
@@ -63,7 +63,7 @@ namespace PlayerRecorder.Core.Record
             if (currentHoldingItem != hub.inventory.Network_curItemSynced)
             {
                 currentHoldingItem = hub.inventory.Network_curItemSynced;
-                RecorderCore.OnReceiveEvent(new UpdateHoldingItem()
+                RecordCore.OnReceiveEvent(new UpdateHoldingItem()
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
                     HoldingItem = (sbyte)hub.inventory.Network_curItemSynced
@@ -73,7 +73,7 @@ namespace PlayerRecorder.Core.Record
             if (currentRole != hub.characterClassManager.NetworkCurClass)
             {
                 currentRole = hub.characterClassManager.NetworkCurClass;
-                RecorderCore.OnReceiveEvent(new UpdateRoleData()
+                RecordCore.OnReceiveEvent(new UpdateRoleData()
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
                     RoleID = (sbyte)currentRole
@@ -84,7 +84,7 @@ namespace PlayerRecorder.Core.Record
         void OnDestroy()
         {
             Log.Info($"Player record destroy for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-            RecorderCore.OnReceiveEvent(new LeaveData()
+            RecordCore.OnReceiveEvent(new LeaveData()
             {
                 PlayerID = (sbyte)this.hub.queryProcessor.PlayerId
             });

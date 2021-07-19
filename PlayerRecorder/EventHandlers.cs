@@ -1,11 +1,9 @@
 ﻿using Exiled.API.Features;
 using Exiled.Events.EventArgs;
-using Exiled.Permissions.Extensions;
 using MEC;
 using Mirror;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
-using PlayerRecorder.Enums;
 using PlayerRecorder.Structs;
 using System;
 using System.IO;
@@ -14,10 +12,10 @@ namespace PlayerRecorder
 {
     public class EventHandlers
     {
-        private RecorderCore core;
+        private RecordCore core;
         private ReplayCore core2;
         public bool firstrun = false;
-        public EventHandlers(RecorderCore core, ReplayCore core2)
+        public EventHandlers(RecordCore core, ReplayCore core2)
         {
             this.core = core;
             this.core2 = core2;
@@ -48,7 +46,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new Change914KnobData()
+            RecordCore.OnReceiveEvent(new Change914KnobData()
             {
                 KnobSetting = (sbyte)ev.KnobSetting
             });
@@ -58,7 +56,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new OpenCloseGeneratorData()
+            RecordCore.OnReceiveEvent(new OpenCloseGeneratorData()
             {
                 IsOpen = false,
                 Position = new Vector3Data() { x = ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z }
@@ -69,7 +67,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new OpenCloseGeneratorData()
+            RecordCore.OnReceiveEvent(new OpenCloseGeneratorData()
             {
                 IsOpen = true,
                 Position = new Vector3Data() { x = ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z }
@@ -80,7 +78,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new UnlockGeneratorData()
+            RecordCore.OnReceiveEvent(new UnlockGeneratorData()
             {
                 Position = new Vector3Data() { x= ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z}
             });
@@ -90,7 +88,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new CreateRagdollData()
+            RecordCore.OnReceiveEvent(new CreateRagdollData()
             {
                 ClassID = (int)ev.RoleType,
                 OwnerID = ev.DissonanceId,
@@ -113,7 +111,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new ReloadWeaponData()
+            RecordCore.OnReceiveEvent(new ReloadWeaponData()
             {
                 PlayerID = (sbyte)ev.Player.Id
             });
@@ -123,7 +121,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
-            RecorderCore.OnReceiveEvent(new ShotWeaponData()
+            RecordCore.OnReceiveEvent(new ShotWeaponData()
             {
                 PlayerID = (sbyte)ev.Shooter.Id
             });
@@ -135,7 +133,7 @@ namespace PlayerRecorder
                 return;
             if (ev.Status == Lift.Status.Moving)
                 return;
-            RecorderCore.OnReceiveEvent(new LiftData()
+            RecordCore.OnReceiveEvent(new LiftData()
             {
                 Elevatorname = ev.Lift.elevatorName
             });
@@ -266,7 +264,7 @@ namespace PlayerRecorder
         {
             waitingforplayers = false;
             MainClass.isRecording = false;
-            Timing.RunCoroutine(RecorderCore.Process(MainClass.currentRoundID));
+            Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID));
             MainClass.currentRoundID++;
             Log.Info($"Round restart with new round id: {MainClass.currentRoundID}");
             if (replayHandler != null && !MainClass.isReplayReady)

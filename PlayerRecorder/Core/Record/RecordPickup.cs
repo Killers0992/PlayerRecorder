@@ -38,7 +38,7 @@ namespace PlayerRecorder.Core.Record
                 break;
             }
             MainClass.recordPickups.Add(uniqueId, this);
-            RecorderCore.OnReceiveEvent(new CreatePickupData()
+            RecordCore.OnReceiveEvent(new CreatePickupData()
             {
                 ItemID = uniqueId,
                 ItemType = (int)pickup.ItemId,
@@ -57,7 +57,7 @@ namespace PlayerRecorder.Core.Record
             {
                 currentPosition = transform.position;
                 currentRotation = transform.rotation;
-                RecorderCore.OnReceiveEvent(new UpdatePickupData()
+                RecordCore.OnReceiveEvent(new UpdatePickupData()
                 {
                     ItemID = uniqueId,
                     ItemType = (int)pickup.itemId,
@@ -71,7 +71,7 @@ namespace PlayerRecorder.Core.Record
         {
             Log.Info($"Pickup record destroy for {pickup.ItemId} ({uniqueId})");
             MainClass.recordPickups.Remove(uniqueId);
-            RecorderCore.OnReceiveEvent(new RemovePickupData()
+            RecordCore.OnReceiveEvent(new RemovePickupData()
             {
                 ItemID = uniqueId
             });

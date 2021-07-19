@@ -31,7 +31,7 @@ namespace PlayerRecorder.Core.Record
             if (TabletConnected != generator.NetworkisTabletConnected)
             {
                 TabletConnected = generator.NetworkisTabletConnected;
-                RecorderCore.OnReceiveEvent(new GeneratorUpdateData()
+                RecordCore.OnReceiveEvent(new GeneratorUpdateData()
                 {
                     TabletConnected = TabletConnected,
                     TotalVoltage = generator.NetworktotalVoltage,

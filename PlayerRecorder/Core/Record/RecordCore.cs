@@ -1,31 +1,20 @@
 ﻿using Exiled.API.Features;
 using Interactables.Interobjects;
-using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
-using Mirror;
-using Mirror.LiteNetLib4Mirror;
-using NPCS;
-using PlayerRecorder.Enums;
+using PlayerRecorder.Interfaces;
 using PlayerRecorder.Structs;
 using ProtoBuf;
-using RemoteAdmin;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace PlayerRecorder.Core.Record
 {
-    public class RecorderCore : MonoBehaviour
+    public class RecordCore : MonoBehaviour
     {
-        public static RecorderCore singleton;
+        public static RecordCore singleton;
 
         public static void OnReceiveEvent(IEventType eventObject)
         {

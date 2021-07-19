@@ -29,7 +29,7 @@ namespace PlayerRecorder.Core.Record
             if (InProgress != controller.inProgress)
             {
                 InProgress = controller.inProgress;
-                RecorderCore.OnReceiveEvent(new WarheadUpdateData()
+                RecordCore.OnReceiveEvent(new WarheadUpdateData()
                 {
                     InProgress = controller.inProgress,
                     TimeToDetonation = controller.timeToDetonation,
