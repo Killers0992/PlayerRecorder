@@ -67,7 +67,7 @@ namespace PlayerRecorder
         {
             if (!curDir.ContainsKey(currentRoundID))
                 curDir.Add(currentRoundID, new Dictionary<int, List<IEventType>>());
-            if (curDir.ContainsKey(framer))
+            if (curDir[currentRoundID].ContainsKey(framer))
             {
                 curDir[currentRoundID][framer].Add(eventObject);
             }
