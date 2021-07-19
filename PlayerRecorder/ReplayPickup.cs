@@ -28,7 +28,7 @@ namespace PlayerRecorder
         void Awake()
         {
             Log.Info($"Pickup replay init for {pickup.ItemId}");
-            RecorderCore.OnRegisterReplayPickup(this);
+            //RecorderCore.OnRegisterReplayPickup(this);
         }
 
         public void UpdatePickup(UpdatePickupData e)
@@ -44,8 +44,8 @@ namespace PlayerRecorder
         void OnDestroy()
         {
             Log.Info($"Pickup replay destroy for {pickup.ItemId} ({uniqueId})");
-            RecorderCore.replayPickups.Remove(uniqueId);
-            RecorderCore.OnUnRegisterReplayPickup(this);
+            ReplayCore.replayPickups.Remove(uniqueId);
+           // RecorderCore.OnUnRegisterReplayPickup(this);
         }
     }
 }

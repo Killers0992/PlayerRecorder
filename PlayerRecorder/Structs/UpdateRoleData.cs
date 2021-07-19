@@ -1,5 +1,5 @@
-﻿using MessagePack;
-using PlayerRecorder.Enums;
+﻿using PlayerRecorder.Enums;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class UpdateRoleData : IEventType
     {
-        [Key(0)]
+        [ProtoMember(1)]
         public sbyte PlayerID { get; set; }
-        [Key(1)]
+        [ProtoMember(2)]
         public sbyte RoleID { get; set; }
     }
 }

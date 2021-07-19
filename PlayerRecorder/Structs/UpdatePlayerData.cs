@@ -1,5 +1,5 @@
-﻿using MessagePack;
-using PlayerRecorder.Enums;
+﻿using PlayerRecorder.Enums;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,22 +9,20 @@ using UnityEngine;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class UpdatePlayerData : IEventType
     {
-        [MessagePack.Key(0)]
+        [ProtoMember(1)]
         public sbyte PlayerID { get; set; }
-        [MessagePack.Key(1)]
+        [ProtoMember(2)]
         public byte MoveState { get; set; }
-        [MessagePack.Key(2)]
-        public sbyte HoldingItem { get; set; }
-        [MessagePack.Key(3)]
+        [ProtoMember(3)]
         public int CurrentAnim { get; set; }
-        [MessagePack.Key(4)]
+        [ProtoMember(4)]
         public Vector2Data Speed { get; set; }
-        [MessagePack.Key(5)]
+        [ProtoMember(5)]
         public Vector3Data Position { get; set; }
-        [MessagePack.Key(6)]
+        [ProtoMember(6)]
         public Vector2Data Rotation { get; set; }
     }
 }

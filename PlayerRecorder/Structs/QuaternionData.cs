@@ -1,4 +1,4 @@
-﻿using MessagePack;
+﻿using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,32 +8,20 @@ using UnityEngine;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class QuaternionData
     {
-        [Key(0)]
+        [ProtoMember(1)]
         public float x { get; set; }
-        [Key(1)]
+        [ProtoMember(2)]
         public float y { get; set; }
-        [Key(2)]
+        [ProtoMember(3)]
         public float z { get; set; }
-        [Key(3)]
+        [ProtoMember(4)]
         public float w { get; set; }
 
-        [SerializationConstructor]
-        public QuaternionData(float x, float y, float z, float w)
-        {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
-        }
-        public void SetQuaternion()
-        {
-            quaternion = new Quaternion(x, y,z,w);
-        }
 
-        [IgnoreMember]
-        public Quaternion quaternion;
+        [ProtoIgnore]
+        public Quaternion quaternion => new Quaternion(x,y,z,w);
     }
 }

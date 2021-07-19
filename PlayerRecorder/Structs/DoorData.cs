@@ -1,5 +1,5 @@
-﻿using MessagePack;
-using PlayerRecorder.Enums;
+﻿using PlayerRecorder.Enums;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +9,12 @@ using UnityEngine;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class DoorData : IEventType
     {
-        [Key(0)]
+        [ProtoMember(1)]
         public bool State { get; set; }
-        [Key(1)]
+        [ProtoMember(2)]
         public Vector3Data Position { get; set; }
     }
 }

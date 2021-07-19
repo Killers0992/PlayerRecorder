@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [ProtoContract]
-    public class DelayData : IEventType
+    public class Change914KnobData : IEventType
     {
-        public float DelayTime { get; set; }
+        [ProtoMember(1)]
+        public sbyte KnobSetting { get; set; }
     }
 }

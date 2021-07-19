@@ -1,5 +1,5 @@
-﻿using MessagePack;
-using PlayerRecorder.Enums;
+﻿using PlayerRecorder.Enums;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,16 +9,16 @@ using UnityEngine;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class UpdatePickupData : IEventType
     {
-        [Key(0)]
+        [ProtoMember(1)]
         public int ItemID { get; set; }
-        [Key(1)]
+        [ProtoMember(2)]
         public int ItemType { get; set; }
-        [Key(2)]
+        [ProtoMember(3)]
         public Vector3Data Position { get; set; }
-        [Key(3)]
+        [ProtoMember(4)]
         public QuaternionData Rotation { get; set; }
     }
 }

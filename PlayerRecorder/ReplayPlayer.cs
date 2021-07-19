@@ -29,22 +29,29 @@ namespace PlayerRecorder
         void Awake()
         {
             Log.Info($"Player replay init for {this.hub.nicknameSync.Network_myNickSync} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-            RecorderCore.OnRegisterReplayPlayer(this);
+            //RecorderCore.OnRegisterReplayPlayer(this);
         }
 
         public void UpdatePlayer(UpdatePlayerData e)
         {
             if (uniqueId == 0)
                 return;
-            hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
             hub.animationController.NetworkcurAnim = e.CurrentAnim;
             hub.animationController.Networkspeed = e.Speed.vector;
             hub.animationController.Network_curMoveState = e.MoveState;
+            hub.playerMovementSync.RotationSync = e.Rotation.vector;
+
             try
             {
-                hub.playerMovementSync.OverridePosition(e.Position.vector, hub.transform.rotation.eulerAngles.y);
+                hub.playerMovementSync.OverridePosition(e.Position.vector, 0f, true);
             }catch (NullReferenceException) { }
-            hub.playerMovementSync.RotationSync = e.Rotation.vector;
+        }
+
+        public void UpdateHoldingItem(UpdateHoldingItem e)
+        {
+            if (uniqueId == 0)
+                return;
+            hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
         }
 
         public void UpdateRole(UpdateRoleData e)
@@ -71,9 +78,9 @@ namespace PlayerRecorder
 
         void OnDestroy()
         {
-            RecorderCore.replayPlayers.Remove(uniqueId);
+            ReplayCore.replayPlayers.Remove(uniqueId);
             Log.Info($"Player replay destroy for {this.hub.nicknameSync.Network_myNickSync} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-            RecorderCore.OnUnRegisterReplayPlayer(this);
+            //RecorderCore.OnUnRegisterReplayPlayer(this);
         }
     }
 }

@@ -42,15 +42,15 @@ namespace PlayerRecorder
             {
                 ItemID = uniqueId,
                 ItemType = (int)pickup.ItemId,
-                Position = pickup.position.GetData(),
-                Rotation = pickup.rotation.GetData()
-            });
+                Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
+                Rotation = new QuaternionData() {  x= pickup.rotation.x, y=pickup.rotation.y, z=pickup.rotation.z,w=pickup.rotation.w}
+            });;
             Log.Info($"Pickup record init for {pickup.ItemId} ({uniqueId})");
-            RecorderCore.OnRegisterRecordPickup(this);
+            //RecorderCore.OnRegisterRecordPickup(this);
         }
 
-        public void Update()
-        {
+        private void Update()
+        {                           
             if (!RecorderCore.isRecording || pickup?.ItemId == ItemType.None)
                 return;
             if (currentPosition != transform.position || currentRotation != transform.rotation)
@@ -61,8 +61,8 @@ namespace PlayerRecorder
                 {
                     ItemID = uniqueId,
                     ItemType = (int)pickup.itemId,
-                    Position = transform.position.GetData(),
-                    Rotation = transform.rotation.GetData()
+                    Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
+                    Rotation = new QuaternionData() { x = pickup.rotation.x, y = pickup.rotation.y, z = pickup.rotation.z, w = pickup.rotation.w }
                 });
             }
         }
@@ -75,7 +75,7 @@ namespace PlayerRecorder
             {
                 ItemID = uniqueId
             });
-            RecorderCore.OnUnRegisterRecordPickup(this);
+            //RecorderCore.OnUnRegisterRecordPickup(this);
         }
     }
 }

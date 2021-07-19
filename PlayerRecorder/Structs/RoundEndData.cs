@@ -1,5 +1,5 @@
-﻿using MessagePack;
-using PlayerRecorder.Enums;
+﻿using PlayerRecorder.Enums;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class RoundEndData : IEventType
     {
     }

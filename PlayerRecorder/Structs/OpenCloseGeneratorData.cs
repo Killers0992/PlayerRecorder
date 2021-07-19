@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [ProtoContract]
-    public class DelayData : IEventType
+    public class OpenCloseGeneratorData : IEventType
     {
-        public float DelayTime { get; set; }
+        [ProtoMember(1)]
+        public bool IsOpen { get; set; }
+        [ProtoMember(2)]
+        public Vector3Data Position { get; set; }
     }
 }

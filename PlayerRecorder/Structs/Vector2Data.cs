@@ -1,4 +1,4 @@
-﻿using MessagePack;
+﻿using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,25 +8,16 @@ using UnityEngine;
 
 namespace PlayerRecorder.Structs
 {
-    [MessagePackObject]
+    [ProtoContract]
     public class Vector2Data
     {
-        [Key(0)]
+        [ProtoMember(1)]
         public float x { get; set; }
-        [Key(1)]
+        [ProtoMember(2)]
         public float y { get; set; }
 
-        [SerializationConstructor]
-        public Vector2Data(float x, float y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-        public void SetVector()
-        {
-            vector = new Vector2(x, y);
-        }
-        [IgnoreMember]
-        public Vector2 vector;
+
+        [ProtoIgnore]
+        public Vector2 vector => new Vector2(x,y);
     }
 }

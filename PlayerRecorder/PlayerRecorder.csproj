@@ -37,6 +37,9 @@
     <Reference Include="0Harmony">
       <HintPath>..\..\FastRoundrestart\FastRoundrestart\bin\Debug\0Harmony.dll</HintPath>
     </Reference>
+    <Reference Include="0NPCS">
+      <HintPath>C:\Users\Killers0992\Downloads\0NPCS.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
@@ -47,31 +50,29 @@
     <Reference Include="CommandSystem.Core">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\CommandSystem.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.API, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.API.dll</HintPath>
+    <Reference Include="Exiled.API, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.API.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Bootstrap, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Bootstrap.dll</HintPath>
+    <Reference Include="Exiled.Bootstrap, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.Bootstrap.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Events, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Events.dll</HintPath>
+    <Reference Include="Exiled.CreditTags, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.CreditTags.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Loader, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Loader.dll</HintPath>
+    <Reference Include="Exiled.CustomItems, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.CustomItems.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Permissions, Version=2.1.30.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Permissions.dll</HintPath>
+    <Reference Include="Exiled.Events, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.Events.dll</HintPath>
     </Reference>
-    <Reference Include="Exiled.Updater, Version=3.0.3.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\packages\EXILED.2.1.30\lib\net472\Exiled.Updater.dll</HintPath>
+    <Reference Include="Exiled.Loader, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.Loader.dll</HintPath>
     </Reference>
-    <Reference Include="MessagePack, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b4a0369545f0a1be, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Output\dependencies\MessagePack.dll</HintPath>
+    <Reference Include="Exiled.Permissions, Version=2.10.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.Permissions.dll</HintPath>
     </Reference>
-    <Reference Include="MessagePack.Annotations, Version=2.2.0.0, Culture=neutral, PublicKeyToken=b4a0369545f0a1be, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Output\dependencies\MessagePack.Annotations.dll</HintPath>
+    <Reference Include="Exiled.Updater, Version=3.1.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.Updater.dll</HintPath>
     </Reference>
     <Reference Include="Mirror_publicized">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\publicized_assemblies\Mirror_publicized.dll</HintPath>
@@ -79,15 +80,19 @@
     <Reference Include="NorthwoodLib">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\NorthwoodLib.dll</HintPath>
     </Reference>
+    <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.3.0.101\lib\net461\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.Core.3.0.101\lib\net461\protobuf-net.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
-    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Output\dependencies\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core" />
     <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
     </Reference>
@@ -95,20 +100,11 @@
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reflection.Emit" />
-    <Reference Include="System.Reflection.Emit.ILGeneration" />
-    <Reference Include="System.Runtime" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\UnityEngine.dll</HintPath>
@@ -122,21 +118,23 @@
   <ItemGroup>
     <Compile Include="Enums\RecordEvents.cs" />
     <Compile Include="EventHandlers.cs" />
-    <Compile Include="Extensions.cs" />
+    <Compile Include="GeneratorRecord.cs" />
     <Compile Include="MainClass.cs" />
-    <Compile Include="Patches\GhostModePatch.cs" />
-    <Compile Include="Patches\MirrorPatch.cs" />
-    <Compile Include="Patches\ScalePositionFix.cs" />
     <Compile Include="RecordPickup.cs" />
     <Compile Include="RecordPlayer.cs" />
+    <Compile Include="ReplayCore.cs" />
     <Compile Include="ReplayPickup.cs" />
     <Compile Include="ReplayPlayer.cs" />
+    <Compile Include="Structs\Change914KnobData.cs" />
+    <Compile Include="Structs\CreateRagdollData.cs" />
     <Compile Include="Structs\DoorData.cs" />
     <Compile Include="Structs\DelayData.cs" />
+    <Compile Include="Structs\GeneratorUpdateData.cs" />
     <Compile Include="Structs\IEventType.cs" />
     <Compile Include="Structs\LeaveData.cs" />
     <Compile Include="Structs\LiftData.cs" />
     <Compile Include="Structs\CreatePickupData.cs" />
+    <Compile Include="Structs\OpenCloseGeneratorData.cs" />
     <Compile Include="Structs\PlayerInfoData.cs" />
     <Compile Include="Structs\QuaternionData.cs" />
     <Compile Include="Structs\ReloadWeaponData.cs" />
@@ -144,6 +142,8 @@
     <Compile Include="Structs\RoundEndData.cs" />
     <Compile Include="Structs\SeedData.cs" />
     <Compile Include="Structs\ShotWeaponData.cs" />
+    <Compile Include="Structs\UnlockGeneratorData.cs" />
+    <Compile Include="Structs\UpdateHoldingItem.cs" />
     <Compile Include="Structs\UpdatePickupData.cs" />
     <Compile Include="Structs\UpdatePlayerData.cs" />
     <Compile Include="Structs\UpdateRoleData.cs" />
@@ -153,6 +153,8 @@
     <Compile Include="RecorderCore.cs" />
     <Compile Include="Structs\Vector2Data.cs" />
     <Compile Include="Structs\Vector3Data.cs" />
+    <Compile Include="Structs\WarheadUpdateData.cs" />
+    <Compile Include="WarheadRecord.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

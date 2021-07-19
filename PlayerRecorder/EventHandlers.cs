@@ -1,12 +1,10 @@
 ﻿using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using MEC;
-using MessagePack;
 using Mirror;
 using PlayerRecorder.Enums;
 using PlayerRecorder.Structs;
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,13 +19,13 @@ namespace PlayerRecorder
     public class EventHandlers
     {
         private RecorderCore core;
+        private ReplayCore core2;
         public bool firstrun = false;
-        public EventHandlers(RecorderCore core)
+        public EventHandlers(RecorderCore core, ReplayCore core2)
         {
             this.core = core;
             Exiled.Events.Handlers.Server.WaitingForPlayers += WaitingForPlayers;
             Exiled.Events.Handlers.Player.ChangingRole += Player_ChangingRole;
-            Exiled.Events.Handlers.Player.ItemDropped += Player_ItemDropped;
             Exiled.Events.Handlers.Server.RestartingRound += Server_RestartingRound1;
             Exiled.Events.Handlers.Server.SendingRemoteAdminCommand += Server_SendingRemoteAdminCommand;
             Exiled.Events.Handlers.Player.InteractingDoor += Player_InteractingDoor;
@@ -35,10 +33,72 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.Died += Player_Died;
             Exiled.Events.Handlers.Player.Shot += Player_Shot;
             Exiled.Events.Handlers.Player.ReloadingWeapon += Player_ReloadingWeapon;
-            Exiled.Events.Handlers.Player.Verified += Player_Verified;
-            Exiled.Events.Handlers.Map.SpawnedItem += Map_SpawnedItem;
             Exiled.Events.Handlers.Server.RoundStarted += Server_RoundStarted;
+            Exiled.Events.Handlers.Player.SpawningRagdoll += Player_SpawningRagdoll;
+            Exiled.Events.Handlers.Player.UnlockingGenerator += Player_UnlockingGenerator;
+            Exiled.Events.Handlers.Player.OpeningGenerator += Player_OpeningGenerator;
+            Exiled.Events.Handlers.Player.ClosingGenerator += Player_ClosingGenerator;
+            Exiled.Events.Handlers.Scp914.ChangingKnobSetting += Scp914_ChangingKnobSetting;
             firstrun = true;
+        }
+
+        private void Scp914_ChangingKnobSetting(Exiled.Events.EventArgs.ChangingKnobSettingEventArgs ev)
+        {
+            if (!RecorderCore.isRecording)
+                return;
+            RecorderCore.OnReceiveEvent(new Change914KnobData()
+            {
+                KnobSetting = (sbyte)ev.KnobSetting
+            });
+        }
+
+        private void Player_ClosingGenerator(Exiled.Events.EventArgs.ClosingGeneratorEventArgs ev)
+        {
+            if (!RecorderCore.isRecording)
+                return;
+            RecorderCore.OnReceiveEvent(new OpenCloseGeneratorData()
+            {
+                IsOpen = false,
+                Position = new Vector3Data() { x = ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z }
+            });
+        }
+
+        private void Player_OpeningGenerator(Exiled.Events.EventArgs.OpeningGeneratorEventArgs ev)
+        {
+            if (!RecorderCore.isRecording)
+                return;
+            RecorderCore.OnReceiveEvent(new OpenCloseGeneratorData()
+            {
+                IsOpen = true,
+                Position = new Vector3Data() { x = ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z }
+            });
+        }
+
+        private void Player_UnlockingGenerator(Exiled.Events.EventArgs.UnlockingGeneratorEventArgs ev)
+        {
+            if (!RecorderCore.isRecording)
+                return;
+            RecorderCore.OnReceiveEvent(new UnlockGeneratorData()
+            {
+                Position = new Vector3Data() { x= ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z}
+            });
+        }
+
+        private void Player_SpawningRagdoll(Exiled.Events.EventArgs.SpawningRagdollEventArgs ev)
+        {
+            if (!RecorderCore.isRecording)
+                return;
+            RecorderCore.OnReceiveEvent(new CreateRagdollData()
+            {
+                ClassID = (int)ev.RoleType,
+                OwnerID = ev.DissonanceId,
+                PlayerID = ev.Owner.Id,
+                ToolID = ev.HitInformations.Tool,
+                OwnerNick = ev.Owner.DisplayNickname,
+                Position = new Vector3Data() {  x= ev.Position.x, y= ev.Position.z, z =ev.Position.z},
+                Rotation = new QuaternionData() {  x = ev.Rotation.x, y= ev.Rotation.y, z = ev.Rotation.z, w = ev.Rotation.w},
+                Velocity = new Vector3Data() { x = ev.Velocity.x, y = ev.Velocity.z, z = ev.Velocity.z }
+            });
         }
 
         private void Server_RoundStarted()
@@ -46,19 +106,6 @@ namespace PlayerRecorder
             waitingforplayers = false;
         }
 
-        private void Player_Verified(Exiled.Events.EventArgs.VerifiedEventArgs ev)
-        {
-            if (!RecorderCore.isRecording)
-                return;
-            ev.Player.GameObject.AddComponent<RecordPlayer>();
-        }
-
-        private void Map_SpawnedItem(Exiled.Events.EventArgs.SpawnedItemEventArgs ev)
-        {
-            if (!RecorderCore.isRecording)
-                return;
-            ev.Pickup.gameObject.AddComponent<RecordPickup>();
-        }
 
         private void Player_ReloadingWeapon(Exiled.Events.EventArgs.ReloadingWeaponEventArgs ev)
         {
@@ -110,12 +157,13 @@ namespace PlayerRecorder
             RecorderCore.OnReceiveEvent(new DoorData()
             {
                 State = !ev.Door.TargetState,
-                Position = ev.Door.transform.position.GetData()
+                Position = new Vector3Data() { x = ev.Door.transform.position.x, y = ev.Door.transform.position.y, z = ev.Door.transform.position.z }
             });
         }
         public CoroutineHandle replayHandler;
         private void Server_SendingRemoteAdminCommand(Exiled.Events.EventArgs.SendingRemoteAdminCommandEventArgs ev)
         {
+            Log.Info("Command " + ev.Name);
             switch(ev.Name.ToUpper())
             {
                 case "REPLAY":
@@ -146,7 +194,7 @@ namespace PlayerRecorder
                                 if (File.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1],"Record_" + ev.Arguments[2] + ".rd")))
                                 {
                                     Log.Info("Start prepare");
-                                    replayHandler = Timing.RunCoroutine(core.Replay(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1], "Record_" + ev.Arguments[2] + ".rd")));
+                                    replayHandler = Timing.RunCoroutine(core2.Replay(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1], "Record_" + ev.Arguments[2] + ".rd")));
                                 }
                                 else
                                 {
@@ -209,16 +257,16 @@ namespace PlayerRecorder
                                 RecorderCore.isReplaying = false;
                                 RecorderCore.isReplayReady = false;
                                 core.SeedID = -1;
-                                foreach (var item in RecorderCore.replayPickups)
+                                foreach (var item in ReplayCore.replayPickups)
                                 {
                                     NetworkServer.Destroy(item.Value.gameObject);
                                 }
-                                RecorderCore.replayPickups.Clear();
-                                foreach (var player in RecorderCore.replayPlayers)
+                                ReplayCore.replayPickups.Clear();
+                                foreach (var player in ReplayCore.replayPlayers)
                                 {
                                     NetworkServer.Destroy(player.Value.gameObject);
                                 }
-                                RecorderCore.replayPlayers.Clear();
+                                ReplayCore.replayPlayers.Clear();
                                 ev.Sender.RemoteAdminMessage("Replay ended.", true, "PlayerRecorder");
 
                             }
@@ -237,6 +285,7 @@ namespace PlayerRecorder
         {
             waitingforplayers = false;
             RecorderCore.isRecording = false;
+            Timing.RunCoroutine(core.Process());
             if (replayHandler != null && !RecorderCore.isReplayReady)
                 Timing.KillCoroutines(replayHandler);
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
@@ -245,13 +294,6 @@ namespace PlayerRecorder
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
         }
 
-
-        private void Player_ItemDropped(Exiled.Events.EventArgs.ItemDroppedEventArgs ev)
-        {
-            if (!RecorderCore.isRecording)
-                return;
-            ev.Pickup.gameObject.AddComponent<RecordPickup>();
-        }
 
 
         private void Player_ChangingRole(Exiled.Events.EventArgs.ChangingRoleEventArgs ev)
@@ -275,13 +317,6 @@ namespace PlayerRecorder
                 if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
                     Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
             }
-            if (RecorderCore.singleton.recordingStream != null)
-            {
-                RecorderCore.singleton.recordingStream.Close();
-                RecorderCore.singleton.recordingStream.Dispose();
-                RecorderCore.singleton.recordingStream = null;
-                RecorderCore.recordPickups.Clear();
-            }
             if (RecorderCore.isReplayReady)
             {
                 Log.Info("Start replay");
@@ -291,18 +326,24 @@ namespace PlayerRecorder
                 }
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
-                RecorderCore.replayPickups.Clear();
-                RecorderCore.replayPlayers.Clear();
+                ReplayCore.replayPickups.Clear();
+                ReplayCore.replayPlayers.Clear();
             }
             else
             {
                 core.StartRecording();
+                RecorderCore.framer = 0;
                 RecorderCore.isRecording = true;
                 Log.Info("New recorder instance created.");
                 foreach (var pickup in UnityEngine.Object.FindObjectsOfType<Pickup>())
                 {
                     pickup.gameObject.AddComponent<RecordPickup>();
                 }
+                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
+                {
+                    gen.gameObject.AddComponent<GeneratorRecord>();
+                }
+                AlphaWarheadController.Host.gameObject.AddComponent<WarheadRecord>();
             }
             waitingforplayers = true;
         }

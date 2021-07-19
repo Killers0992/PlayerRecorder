@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 namespace PlayerRecorder.Structs
 {
     [ProtoContract]
-    public class DelayData : IEventType
+    public class UpdateHoldingItem : IEventType
     {
-        public float DelayTime { get; set; }
+        [ProtoMember(1)]
+        public sbyte PlayerID { get; set; }
+        [ProtoMember(2)]
+        public sbyte HoldingItem { get; set; }
     }
 }
