@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using MEC;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
 using PlayerRecorder.Interfaces;
@@ -19,8 +20,8 @@ namespace PlayerRecorder
         public override string Name { get; } = "PlayerRecorder";
         public override string Prefix { get; } = "playerrecorder";
 
-        private RecordCore core;
-        private ReplayCore core2;
+        public RecordCore core;
+        public ReplayCore core2;
         private EventHandlers eventHandlers;
 
         public static MainClass singleton;
@@ -40,7 +41,7 @@ namespace PlayerRecorder
             hrm.PatchAll();
             base.OnEnabled();
         }
-
+        public static CoroutineHandle replayHandler;
 
         public static int currentRoundID = 0;
 

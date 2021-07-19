@@ -25,17 +25,24 @@ namespace PlayerRecorder.Core.Replay
             }
         }
 
-
-        void Awake()
-        {
-            Log.Info($"Player replay init for {this.hub.nicknameSync.Network_myNickSync} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-            //RecorderCore.OnRegisterReplayPlayer(this);
-        }
-
         public void UpdatePlayer(UpdatePlayerData e)
         {
             if (uniqueId == 0)
                 return;
+
+
+
+            if (hub.animationController.NetworkcurAnim != e.CurrentAnim)
+                hub.animationController.NetworkcurAnim = e.CurrentAnim;
+
+            if (hub.animationController.Networkspeed != e.Speed.vector)
+                hub.animationController.Networkspeed = e.Speed.vector;
+
+            if (hub.animationController.Network_curMoveState != e.MoveState)
+                hub.animationController.Network_curMoveState = e.MoveState;
+
+            if (hub.characterClassManager.NetworkCurClass != (RoleType)e.RoleID)
+                hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
 
             try
             {
@@ -43,15 +50,6 @@ namespace PlayerRecorder.Core.Replay
             }
             catch (NullReferenceException) { }
             hub.playerMovementSync.RotationSync = e.Rotation.vector;
-
-            if (hub.animationController.NetworkcurAnim != e.CurrentAnim)
-                hub.animationController.NetworkcurAnim = e.CurrentAnim;
-            if (hub.animationController.Networkspeed != e.Speed.vector)
-                hub.animationController.Networkspeed = e.Speed.vector;
-            if (hub.animationController.Network_curMoveState != e.MoveState)
-                hub.animationController.Network_curMoveState = e.MoveState;
-            if (hub.characterClassManager.NetworkCurClass != (RoleType)e.RoleID)
-                hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
         }
 
         public void UpdateHoldingItem(UpdateHoldingItem e)
@@ -66,7 +64,6 @@ namespace PlayerRecorder.Core.Replay
             if (uniqueId == 0)
                 return;
             hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
-            Log.Info($"Changed fake player role ID: {e.PlayerID}, RoleType: {(RoleType)e.RoleID}.");
         }
 
         public void ShotWeapon()
@@ -86,8 +83,6 @@ namespace PlayerRecorder.Core.Replay
         void OnDestroy()
         {
             MainClass.replayPlayers.Remove(uniqueId);
-            Log.Info($"Player replay destroy for {this.hub.nicknameSync.Network_myNickSync} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
-            //RecorderCore.OnUnRegisterReplayPlayer(this);
         }
     }
 }

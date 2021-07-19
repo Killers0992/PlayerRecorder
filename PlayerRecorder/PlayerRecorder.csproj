@@ -116,6 +116,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\EndCommand.cs" />
+    <Compile Include="Commands\PrepareCommand.cs" />
+    <Compile Include="Commands\ReplayCommand.cs" />
+    <Compile Include="Commands\PauseCommand.cs" />
+    <Compile Include="Commands\StartCommand.cs" />
     <Compile Include="Core\Record\DoorRecord.cs" />
     <Compile Include="EventHandlers.cs" />
     <Compile Include="Core\Record\GeneratorRecord.cs" />

@@ -58,8 +58,7 @@ namespace PlayerRecorder.Core.Replay
             {
                 yield return Timing.WaitForOneFrame;
             }
-            npc.VisibleForRoles = new HashSet<RoleType>() { RoleType.Spectator, RoleType.Tutorial };
-            var rplayer = npc.NPCPlayer.GameObject.AddComponent<ReplayPlayer>();
+            var rplayer = npc.NPCPlayer.ReferenceHub.gameObject.AddComponent<ReplayPlayer>();
             rplayer.uniqueId = clientid;
             MainClass.replayPlayers.Add(clientid, rplayer);
         }
@@ -71,17 +70,20 @@ namespace PlayerRecorder.Core.Replay
         }
 
         public int lastFrame = 9999;
+        public int lastExecutedEvents = 0;
 
         void Update()
         {
-            if (MainClass.isReplayPaused || (!MainClass.isReplaying && MainClass.isReplayReady))
+            if (MainClass.isReplayPaused || (!MainClass.isReplaying && MainClass.isReplayReady) || !MainClass.isReplayReady)
             {
                 return;
             }
+            Log.Info($"Replay {MainClass.framer}/{lastFrame}, executed {lastExecutedEvents}");
             if (MainClass.replayEvents.TryGetValue(MainClass.framer, out List<IEventType> frames))
             {
                 try
                 {
+                    lastExecutedEvents = frames.Count;
                     foreach (var ev in frames)
                     {
                         switch (ev)

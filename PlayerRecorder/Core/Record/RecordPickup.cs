@@ -45,8 +45,6 @@ namespace PlayerRecorder.Core.Record
                 Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
                 Rotation = new QuaternionData() {  x= pickup.rotation.x, y=pickup.rotation.y, z=pickup.rotation.z,w=pickup.rotation.w}
             });;
-            Log.Info($"Pickup record init for {pickup.ItemId} ({uniqueId})");
-            //RecorderCore.OnRegisterRecordPickup(this);
         }
 
         private void Update()
@@ -69,13 +67,11 @@ namespace PlayerRecorder.Core.Record
 
         void OnDestroy()
         {
-            Log.Info($"Pickup record destroy for {pickup.ItemId} ({uniqueId})");
             MainClass.recordPickups.Remove(uniqueId);
             RecordCore.OnReceiveEvent(new RemovePickupData()
             {
                 ItemID = uniqueId
             });
-            //RecorderCore.OnUnRegisterRecordPickup(this);
         }
     }
 }

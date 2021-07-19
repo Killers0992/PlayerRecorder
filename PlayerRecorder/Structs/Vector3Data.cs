@@ -22,9 +22,7 @@ namespace PlayerRecorder.Structs
         {
             get
             {
-                if (_vec == null)
-                    _vec = new Vector3(x, y, z);
-                return _vec;
+                return new Vector3(x, y, z);
             }
         }
     }

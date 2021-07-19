@@ -22,11 +22,9 @@ namespace PlayerRecorder
             this.core2 = core2;
             Exiled.Events.Handlers.Server.WaitingForPlayers += WaitingForPlayers;
             Exiled.Events.Handlers.Server.RestartingRound += Server_RestartingRound1;
-            Exiled.Events.Handlers.Server.SendingRemoteAdminCommand += Server_SendingRemoteAdminCommand;
             Exiled.Events.Handlers.Player.InteractingElevator += Player_InteractingElevator;
             Exiled.Events.Handlers.Player.Shot += Player_Shot;
             Exiled.Events.Handlers.Player.ReloadingWeapon += Player_ReloadingWeapon;
-            Exiled.Events.Handlers.Server.RoundStarted += Server_RoundStarted;
             Exiled.Events.Handlers.Player.SpawningRagdoll += Player_SpawningRagdoll;
             Exiled.Events.Handlers.Player.UnlockingGenerator += Player_UnlockingGenerator;
             Exiled.Events.Handlers.Player.OpeningGenerator += Player_OpeningGenerator;
@@ -143,12 +141,6 @@ namespace PlayerRecorder
             });
         }
 
-        private void Server_RoundStarted()
-        {
-            waitingforplayers = false;
-        }
-
-
         private void Player_ReloadingWeapon(Exiled.Events.EventArgs.ReloadingWeaponEventArgs ev)
         {
             if (!MainClass.isRecording)
@@ -181,136 +173,14 @@ namespace PlayerRecorder
             });
         }
 
-        public CoroutineHandle replayHandler;
-        private void Server_SendingRemoteAdminCommand(Exiled.Events.EventArgs.SendingRemoteAdminCommandEventArgs ev)
-        {
-            Log.Info("Command " + ev.Name);
-            switch(ev.Name.ToUpper())
-            {
-                case "REPLAY":
-                    ev.IsAllowed = false;
-                    /*if (!ev.Sender.CheckPermission("playerrecorder.replay"))
-                    {
-                        ev.Sender.RemoteAdminMessage("No permission...", true, "PlayerRecorder");
-                        break;
-                    }*/
-                    if (ev.Arguments.Count == 0)
-                    {
-                        ev.Sender.RemoteAdminMessage(string.Concat("Commands:",
-                            Environment.NewLine,
-                            "- replay prepare <port> <recordId>",
-                            Environment.NewLine,
-                            "- replay start",
-                            Environment.NewLine,
-                            "- replay pause",
-                            Environment.NewLine,
-                            "- replay setspeed <value> ( default is: 0.1 )"), true, "PlayerRecorder");
-                        return;
-                    }
-                    switch(ev.Arguments[0].ToUpper())
-                    {
-                        case "PREPARE":
-                            if (ev.Arguments.Count == 3)
-                            {
-                                if (File.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1],"Record_" + ev.Arguments[2] + ".rd")))
-                                {
-                                    Log.Info("Start prepare");
-                                    replayHandler = Timing.RunCoroutine(core2.Replay(Path.Combine(MainClass.pluginDir, "RecorderData", ev.Arguments[1], "Record_" + ev.Arguments[2] + ".rd")));
-                                }
-                                else
-                                {
-                                    ev.Sender.RemoteAdminMessage("File not found.", true, "PlayerRecorder");
-                                }
-                            }
-                            else
-                            {
-                                ev.Sender.RemoteAdminMessage("Syntax: PREPARE <port> <recordId>", true, "PlayerRecorder");
-                            }
-                            break;
-                        case "START":
-                            if (MainClass.isReplayReady && !MainClass.isReplaying)
-                            {
-                                MainClass.isReplaying = true;
-                                ev.Sender.RemoteAdminMessage("Replay started.", true, "PlayerRecorder");
-                            }
-                            else
-                            {
-                                ev.Sender.RemoteAdminMessage("Replay not prepared.", true, "PlayerRecorder");
-                            }
-                            break;
-                        case "PAUSE":
-                            if (MainClass.isReplaying)
-                            {
-                                MainClass.isReplayPaused = !MainClass.isReplayPaused;
-                                ev.Sender.RemoteAdminMessage($"Replay {(MainClass.isReplayPaused ? "paused" : "started")}.", true, "PlayerRecorder");
-                            }
-                            else
-                            {
-                                ev.Sender.RemoteAdminMessage("Replay not prepared.", true, "PlayerRecorder");
-                            }
-                            break;
-                        case "SETSPEED":
-                            if (ev.Arguments.Count != 2)
-                            {
-                                ev.Sender.RemoteAdminMessage("Syntax: PAUSE <value>", true, "PlayerRecorder");
-                                return;
-                            }
-                            if (MainClass.isReplaying)
-                            {
-                                if (float.TryParse(ev.Arguments[1], out float speed))
-                                {
-                                    MainClass.singleton.Config.replayDelay = speed;
-                                    ev.Sender.RemoteAdminMessage($"Replay speed set to {speed}.", true, "PlayerRecorder");
-                                }
-                                else
-                                {
-                                    ev.Sender.RemoteAdminMessage("Syntax: PAUSE <value>", true, "PlayerRecorder");
-                                }
-                            }
-                            else
-                            {
-                                ev.Sender.RemoteAdminMessage("Replay not prepared.", true, "PlayerRecorder");
-                            }
-                            break;
-                        case "END":
-                            if (MainClass.isReplaying)
-                            {
-                                MainClass.isReplaying = false;
-                                MainClass.isReplayReady = false;
-                                MainClass.SeedID = -1;
-                                foreach (var item in MainClass.replayPickups)
-                                {
-                                    NetworkServer.Destroy(item.Value.gameObject);
-                                }
-                                MainClass.replayPickups.Clear();
-                                foreach (var player in MainClass.replayPlayers)
-                                {
-                                    NetworkServer.Destroy(player.Value.gameObject);
-                                }
-                                MainClass.replayPlayers.Clear();
-                                ev.Sender.RemoteAdminMessage("Replay ended.", true, "PlayerRecorder");
-
-                            }
-                            else
-                            {
-                                ev.Sender.RemoteAdminMessage("Replay not prepared.", true, "PlayerRecorder");
-                            }
-                            break;
-                    }
-                    break;
-            }
-        }
-
-        public static bool waitingforplayers = false;
         private void Server_RestartingRound1()
         {
-            waitingforplayers = false;
             MainClass.isRecording = false;
             Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID));
             MainClass.currentRoundID++;
             Log.Info($"Round restart with new round id: {MainClass.currentRoundID}");
-            if (replayHandler != null && !MainClass.isReplayReady)
-                Timing.KillCoroutines(replayHandler);
+            if (MainClass.replayHandler != null && !MainClass.isReplayReady)
+                Timing.KillCoroutines(MainClass.replayHandler);
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
@@ -355,7 +225,6 @@ namespace PlayerRecorder
                 }
                 AlphaWarheadController.Host.gameObject.AddComponent<WarheadRecord>();
             }
-            waitingforplayers = true;
         }
     }
 }

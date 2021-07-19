@@ -29,14 +29,12 @@ namespace PlayerRecorder.Core.Record
 
         void Awake() 
         { 
-            Log.Info($"Player record init for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecordCore.OnReceiveEvent(new PlayerInfoData()
             {
                 PlayerID = (sbyte)this.hub.queryProcessor.PlayerId,
                 UserID = this.hub.characterClassManager.UserId,
                 UserName = this.hub.nicknameSync._firstNickname
             });
-            //RecorderCore.OnRegisterRecordPlayer(this);
         }
 
         private void Update()
@@ -46,7 +44,6 @@ namespace PlayerRecorder.Core.Record
 
             if (currentPosition != hub.transform.position || currentRotation != hub.playerMovementSync.Rotations)
             {
-
                 currentPosition = hub.transform.position;
                 currentRotation = hub.playerMovementSync.Rotations;
                 RecordCore.OnReceiveEvent(new UpdatePlayerData()
@@ -54,6 +51,7 @@ namespace PlayerRecorder.Core.Record
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
                     MoveState = (byte)hub.animationController.Network_curMoveState,
                     CurrentAnim = hub.animationController.NetworkcurAnim,
+                    RoleID = (sbyte)hub.characterClassManager.NetworkCurClass,
                     Speed = new Vector2Data() { x = hub.animationController.Networkspeed.x, y = hub.animationController.Networkspeed.y },
                     Position = new Vector3Data() { x = hub.transform.position.x, y = hub.transform.position.y, z = hub.transform.position.z },
                     Rotation = new Vector2Data() { x = hub.playerMovementSync.Rotations.x, y = hub.playerMovementSync.Rotations.y }
@@ -83,12 +81,10 @@ namespace PlayerRecorder.Core.Record
 
         void OnDestroy()
         {
-            Log.Info($"Player record destroy for {this.hub.nicknameSync._firstNickname} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             RecordCore.OnReceiveEvent(new LeaveData()
             {
                 PlayerID = (sbyte)this.hub.queryProcessor.PlayerId
             });
-            //RecorderCore.OnRegisterRecordPlayer(this);
         }
     }
 }

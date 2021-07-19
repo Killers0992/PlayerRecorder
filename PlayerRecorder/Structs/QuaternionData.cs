@@ -23,9 +23,7 @@ namespace PlayerRecorder.Structs
         {
             get
             {
-                if (_quat == null)
-                    _quat = new Quaternion(x, y, z, w);
-                return _quat;
+                return new Quaternion(x, y, z, w);
             }
         }
     }
