@@ -30,7 +30,7 @@ internal static class SeedPatch
 		{
 			SeedSynchronizer.DebugInfo("Server has successfully loaded a seed from config: " + num, MessageImportance.Normal, false);
 		}
-		__instance.Network_syncSeed = RecorderCore.singleton.SeedID != -1 ? RecorderCore.singleton.SeedID : Mathf.Clamp(num, 1, int.MaxValue);
+		__instance.Network_syncSeed = MainClass.SeedID != -1 ? MainClass.SeedID : Mathf.Clamp(num, 1, int.MaxValue);
 		return false;
 	}
 }

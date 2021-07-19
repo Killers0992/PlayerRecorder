@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Replay
 {
     public class ReplayPickup : MonoBehaviour
     {
@@ -44,7 +44,7 @@ namespace PlayerRecorder
         void OnDestroy()
         {
             Log.Info($"Pickup replay destroy for {pickup.ItemId} ({uniqueId})");
-            ReplayCore.replayPickups.Remove(uniqueId);
+            MainClass.replayPickups.Remove(uniqueId);
            // RecorderCore.OnUnRegisterReplayPickup(this);
         }
     }

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Record
 {
     public class WarheadRecord : MonoBehaviour
     {
@@ -22,11 +22,6 @@ namespace PlayerRecorder
                     _controller = GetComponent<AlphaWarheadController>();
                 return _controller;
             }
-        }
-
-        void Awake()
-        {
-            Log.Info($"Warhead record init.");
         }
 
         private void Update()

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Replay
 {
     public class ReplayPlayer : MonoBehaviour
     {
@@ -78,7 +78,7 @@ namespace PlayerRecorder
 
         void OnDestroy()
         {
-            ReplayCore.replayPlayers.Remove(uniqueId);
+            MainClass.replayPlayers.Remove(uniqueId);
             Log.Info($"Player replay destroy for {this.hub.nicknameSync.Network_myNickSync} ({this.hub.characterClassManager.UserId}) ({this.hub.queryProcessor.PlayerId})");
             //RecorderCore.OnUnRegisterReplayPlayer(this);
         }

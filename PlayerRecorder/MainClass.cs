@@ -1,4 +1,7 @@
 ﻿using Exiled.API.Features;
+using PlayerRecorder.Core.Record;
+using PlayerRecorder.Core.Replay;
+using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,10 +35,30 @@ namespace PlayerRecorder
             core = CustomNetworkManager.singleton.gameObject.AddComponent<RecorderCore>();
             core2 = CustomNetworkManager.singleton.gameObject.AddComponent<ReplayCore>();
             eventHandlers = new EventHandlers(core, core2);
-            core.handler = eventHandlers;
             HarmonyLib.Harmony hrm = new HarmonyLib.Harmony("Patcher.recorder");
             hrm.PatchAll();
             base.OnEnabled();
         }
+
+
+        public static int currentRoundID = 0;
+
+        public static bool isRecording = false;
+        public static bool isReplaying = false;
+
+        public static bool isReplayReady = false;
+        public static bool isReplayPaused = false;
+
+        public static int SeedID = -1;
+
+        public static Dictionary<int, Dictionary<int, List<IEventType>>> curDir = new Dictionary<int, Dictionary<int, List<IEventType>>>();
+        public static Dictionary<int, RecordPickup> recordPickups = new Dictionary<int, RecordPickup>();
+        public static int framer;
+
+        public static Dictionary<int, ReplayPlayer> replayPlayers = new Dictionary<int, ReplayPlayer>();
+        public static Dictionary<int, ReplayPickup> replayPickups = new Dictionary<int, ReplayPickup>();
+
+        public static Dictionary<int, List<IEventType>> replayEvents = new Dictionary<int, List<IEventType>>();
+
     }
 }

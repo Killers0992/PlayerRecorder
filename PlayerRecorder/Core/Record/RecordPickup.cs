@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Record
 {
     public class RecordPickup : MonoBehaviour
     {
@@ -31,13 +31,13 @@ namespace PlayerRecorder
         {
             for (int i = 1; i < int.MaxValue; i++)
             {
-                if (RecorderCore.recordPickups.Keys.Any(p => p == i))
+                if (MainClass.recordPickups.Keys.Any(p => p == i))
                     continue;
 
                 uniqueId = i;
                 break;
             }
-            RecorderCore.recordPickups.Add(uniqueId, this);
+            MainClass.recordPickups.Add(uniqueId, this);
             RecorderCore.OnReceiveEvent(new CreatePickupData()
             {
                 ItemID = uniqueId,
@@ -51,7 +51,7 @@ namespace PlayerRecorder
 
         private void Update()
         {                           
-            if (!RecorderCore.isRecording || pickup?.ItemId == ItemType.None)
+            if (!MainClass.isRecording || pickup?.ItemId == ItemType.None)
                 return;
             if (currentPosition != transform.position || currentRotation != transform.rotation)
             {
@@ -70,7 +70,7 @@ namespace PlayerRecorder
         void OnDestroy()
         {
             Log.Info($"Pickup record destroy for {pickup.ItemId} ({uniqueId})");
-            RecorderCore.recordPickups.Remove(uniqueId);
+            MainClass.recordPickups.Remove(uniqueId);
             RecorderCore.OnReceiveEvent(new RemovePickupData()
             {
                 ItemID = uniqueId

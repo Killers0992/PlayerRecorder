@@ -1,18 +1,14 @@
 ﻿using Exiled.API.Features;
+using Exiled.Events.EventArgs;
 using Exiled.Permissions.Extensions;
 using MEC;
 using Mirror;
+using PlayerRecorder.Core.Record;
+using PlayerRecorder.Core.Replay;
 using PlayerRecorder.Enums;
 using PlayerRecorder.Structs;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace PlayerRecorder
 {
@@ -24,13 +20,11 @@ namespace PlayerRecorder
         public EventHandlers(RecorderCore core, ReplayCore core2)
         {
             this.core = core;
+            this.core2 = core2;
             Exiled.Events.Handlers.Server.WaitingForPlayers += WaitingForPlayers;
-            Exiled.Events.Handlers.Player.ChangingRole += Player_ChangingRole;
             Exiled.Events.Handlers.Server.RestartingRound += Server_RestartingRound1;
             Exiled.Events.Handlers.Server.SendingRemoteAdminCommand += Server_SendingRemoteAdminCommand;
-            Exiled.Events.Handlers.Player.InteractingDoor += Player_InteractingDoor;
             Exiled.Events.Handlers.Player.InteractingElevator += Player_InteractingElevator;
-            Exiled.Events.Handlers.Player.Died += Player_Died;
             Exiled.Events.Handlers.Player.Shot += Player_Shot;
             Exiled.Events.Handlers.Player.ReloadingWeapon += Player_ReloadingWeapon;
             Exiled.Events.Handlers.Server.RoundStarted += Server_RoundStarted;
@@ -39,12 +33,20 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.OpeningGenerator += Player_OpeningGenerator;
             Exiled.Events.Handlers.Player.ClosingGenerator += Player_ClosingGenerator;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting += Scp914_ChangingKnobSetting;
+            Exiled.Events.Handlers.Player.Verified += Player_Verified;
             firstrun = true;
+        }
+
+        private void Player_Verified(VerifiedEventArgs ev)
+        {
+            if (!MainClass.isRecording)
+                return;
+            ev.Player.GameObject.AddComponent<RecordPlayer>();
         }
 
         private void Scp914_ChangingKnobSetting(Exiled.Events.EventArgs.ChangingKnobSettingEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new Change914KnobData()
             {
@@ -54,7 +56,7 @@ namespace PlayerRecorder
 
         private void Player_ClosingGenerator(Exiled.Events.EventArgs.ClosingGeneratorEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new OpenCloseGeneratorData()
             {
@@ -65,7 +67,7 @@ namespace PlayerRecorder
 
         private void Player_OpeningGenerator(Exiled.Events.EventArgs.OpeningGeneratorEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new OpenCloseGeneratorData()
             {
@@ -76,7 +78,7 @@ namespace PlayerRecorder
 
         private void Player_UnlockingGenerator(Exiled.Events.EventArgs.UnlockingGeneratorEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new UnlockGeneratorData()
             {
@@ -86,7 +88,7 @@ namespace PlayerRecorder
 
         private void Player_SpawningRagdoll(Exiled.Events.EventArgs.SpawningRagdollEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new CreateRagdollData()
             {
@@ -109,7 +111,7 @@ namespace PlayerRecorder
 
         private void Player_ReloadingWeapon(Exiled.Events.EventArgs.ReloadingWeaponEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new ReloadWeaponData()
             {
@@ -119,7 +121,7 @@ namespace PlayerRecorder
 
         private void Player_Shot(Exiled.Events.EventArgs.ShotEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             RecorderCore.OnReceiveEvent(new ShotWeaponData()
             {
@@ -127,20 +129,9 @@ namespace PlayerRecorder
             });
         }
 
-        private void Player_Died(Exiled.Events.EventArgs.DiedEventArgs ev)
-        {
-            if (!RecorderCore.isRecording)
-                return;
-            RecorderCore.OnReceiveEvent(new UpdateRoleData()
-            {
-                PlayerID = (sbyte)ev.Target.Id,
-                RoleID = (sbyte)RoleType.Spectator
-            });
-        }
-
         private void Player_InteractingElevator(Exiled.Events.EventArgs.InteractingElevatorEventArgs ev)
         {
-            if (!RecorderCore.isRecording)
+            if (!MainClass.isRecording)
                 return;
             if (ev.Status == Lift.Status.Moving)
                 return;
@@ -150,16 +141,6 @@ namespace PlayerRecorder
             });
         }
 
-        private void Player_InteractingDoor(Exiled.Events.EventArgs.InteractingDoorEventArgs ev)
-        {
-            if (!RecorderCore.isRecording)
-                return;
-            RecorderCore.OnReceiveEvent(new DoorData()
-            {
-                State = !ev.Door.TargetState,
-                Position = new Vector3Data() { x = ev.Door.transform.position.x, y = ev.Door.transform.position.y, z = ev.Door.transform.position.z }
-            });
-        }
         public CoroutineHandle replayHandler;
         private void Server_SendingRemoteAdminCommand(Exiled.Events.EventArgs.SendingRemoteAdminCommandEventArgs ev)
         {
@@ -207,9 +188,9 @@ namespace PlayerRecorder
                             }
                             break;
                         case "START":
-                            if (RecorderCore.isReplayReady && !RecorderCore.isReplaying)
+                            if (MainClass.isReplayReady && !MainClass.isReplaying)
                             {
-                                RecorderCore.isReplaying = true;
+                                MainClass.isReplaying = true;
                                 ev.Sender.RemoteAdminMessage("Replay started.", true, "PlayerRecorder");
                             }
                             else
@@ -218,10 +199,10 @@ namespace PlayerRecorder
                             }
                             break;
                         case "PAUSE":
-                            if (RecorderCore.isReplaying)
+                            if (MainClass.isReplaying)
                             {
-                                RecorderCore.isReplayPaused = !RecorderCore.isReplayPaused;
-                                ev.Sender.RemoteAdminMessage($"Replay {(RecorderCore.isReplayPaused ? "paused" : "started")}.", true, "PlayerRecorder");
+                                MainClass.isReplayPaused = !MainClass.isReplayPaused;
+                                ev.Sender.RemoteAdminMessage($"Replay {(MainClass.isReplayPaused ? "paused" : "started")}.", true, "PlayerRecorder");
                             }
                             else
                             {
@@ -234,7 +215,7 @@ namespace PlayerRecorder
                                 ev.Sender.RemoteAdminMessage("Syntax: PAUSE <value>", true, "PlayerRecorder");
                                 return;
                             }
-                            if (RecorderCore.isReplaying)
+                            if (MainClass.isReplaying)
                             {
                                 if (float.TryParse(ev.Arguments[1], out float speed))
                                 {
@@ -252,21 +233,21 @@ namespace PlayerRecorder
                             }
                             break;
                         case "END":
-                            if (RecorderCore.isReplaying)
+                            if (MainClass.isReplaying)
                             {
-                                RecorderCore.isReplaying = false;
-                                RecorderCore.isReplayReady = false;
-                                core.SeedID = -1;
-                                foreach (var item in ReplayCore.replayPickups)
+                                MainClass.isReplaying = false;
+                                MainClass.isReplayReady = false;
+                                MainClass.SeedID = -1;
+                                foreach (var item in MainClass.replayPickups)
                                 {
                                     NetworkServer.Destroy(item.Value.gameObject);
                                 }
-                                ReplayCore.replayPickups.Clear();
-                                foreach (var player in ReplayCore.replayPlayers)
+                                MainClass.replayPickups.Clear();
+                                foreach (var player in MainClass.replayPlayers)
                                 {
                                     NetworkServer.Destroy(player.Value.gameObject);
                                 }
-                                ReplayCore.replayPlayers.Clear();
+                                MainClass.replayPlayers.Clear();
                                 ev.Sender.RemoteAdminMessage("Replay ended.", true, "PlayerRecorder");
 
                             }
@@ -284,27 +265,16 @@ namespace PlayerRecorder
         private void Server_RestartingRound1()
         {
             waitingforplayers = false;
-            RecorderCore.isRecording = false;
-            Timing.RunCoroutine(core.Process());
-            if (replayHandler != null && !RecorderCore.isReplayReady)
+            MainClass.isRecording = false;
+            Timing.RunCoroutine(RecorderCore.Process(MainClass.currentRoundID));
+            MainClass.currentRoundID++;
+            Log.Info($"Round restart with new round id: {MainClass.currentRoundID}");
+            if (replayHandler != null && !MainClass.isReplayReady)
                 Timing.KillCoroutines(replayHandler);
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
                 Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
-        }
-
-
-
-        private void Player_ChangingRole(Exiled.Events.EventArgs.ChangingRoleEventArgs ev)
-        {
-            if (!RecorderCore.isRecording)
-                return;
-            RecorderCore.OnReceiveEvent(new UpdateRoleData()
-            {
-                PlayerID = (sbyte)ev.Player.Id,
-                RoleID = (sbyte)ev.NewRole
-            });
         }
 
         private void WaitingForPlayers()
@@ -317,7 +287,7 @@ namespace PlayerRecorder
                 if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
                     Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
             }
-            if (RecorderCore.isReplayReady)
+            if (MainClass.isReplayReady)
             {
                 Log.Info("Start replay");
                 foreach (var itm in UnityEngine.Object.FindObjectsOfType<Pickup>())
@@ -326,19 +296,15 @@ namespace PlayerRecorder
                 }
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
-                ReplayCore.replayPickups.Clear();
-                ReplayCore.replayPlayers.Clear();
+                MainClass.replayPickups.Clear();
+                MainClass.replayPlayers.Clear();
             }
             else
             {
                 core.StartRecording();
-                RecorderCore.framer = 0;
-                RecorderCore.isRecording = true;
+                MainClass.framer = 0;
                 Log.Info("New recorder instance created.");
-                foreach (var pickup in UnityEngine.Object.FindObjectsOfType<Pickup>())
-                {
-                    pickup.gameObject.AddComponent<RecordPickup>();
-                }
+                MainClass.isRecording = true;
                 foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
                 {
                     gen.gameObject.AddComponent<GeneratorRecord>();

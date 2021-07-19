@@ -14,60 +14,11 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Replay
 {
     public class ReplayCore : MonoBehaviour
     {
         public static ReplayCore singleton;
-
-        public static int currentRoundID = 0;
-
-        public static bool isRecording = false;
-        public static bool isReplaying = false;
-
-        public static bool isReplayReady = false;
-        public static bool isReplayPaused = false;
-
-        public int SeedID = -1;
-
-        public static event EventHandler<ReplayPlayer> RegisterReplayPlayer;
-        public static event EventHandler<ReplayPlayer> UnRegisterReplayPlayer;
-
-        public static event EventHandler<ReplayPickup> RegisterReplayPickup;
-        public static event EventHandler<ReplayPickup> UnRegisterReplayPickup;
-
-        public static void OnRegisterReplayPlayer(ReplayPlayer replayplayer)
-        {
-            RegisterReplayPlayer.Invoke(null, replayplayer);
-        }
-
-        public static void OnUnRegisterReplayPlayer(ReplayPlayer replayplayer)
-        {
-            UnRegisterReplayPlayer.Invoke(null, replayplayer);
-        }
-
-        public static void OnRegisterReplayPickup(ReplayPickup replaypickup)
-        {
-            RegisterReplayPickup.Invoke(null, replaypickup);
-        }
-
-        public static void OnUnRegisterReplayPickup(ReplayPickup replaypickup)
-        {
-            UnRegisterReplayPickup.Invoke(null, replaypickup);
-        }
-
-        void Start()
-        {
-            singleton = this;
-        }
-
-        public static int framer;
-
-        void Update()
-        {
-            if (isRecording)
-                framer++;
-        }
 
         private RagdollManager _manager;
 
@@ -81,18 +32,30 @@ namespace PlayerRecorder
             }
         }
 
-        public IEnumerator<float> CreateFakePlayer(sbyte clientid, string name, string userId, RoleType RoleType)
+        void Start()
         {
-            var npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType, ItemType.None, name);
-            yield return Timing.WaitForSeconds(0.5f);
-            var rplayer = npc.NPCPlayer.GameObject.AddComponent<ReplayPlayer>();
-            rplayer.uniqueId = clientid;
-            replayPlayers.Add(clientid, rplayer);
+            DontDestroyOnLoad(this);
+            singleton = this;
         }
 
-        public static Dictionary<int, ReplayPlayer> replayPlayers = new Dictionary<int, ReplayPlayer>();
-        public static Dictionary<int, ReplayPickup> replayPickups = new Dictionary<int, ReplayPickup>();
+        void Update()
+        {
+            if (MainClass.isRecording)
+                MainClass.framer++;
+        }
 
+        public IEnumerator<float> CreateFakePlayer(sbyte clientid, string name, string userId)
+        {
+            var npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType.Spectator, ItemType.None, name);
+            while(npc.NPCPlayer == null) 
+            {
+                yield return Timing.WaitForOneFrame;
+            }
+            npc.VisibleForRoles = new HashSet<RoleType>() { RoleType.Spectator, RoleType.Tutorial };
+            var rplayer = npc.NPCPlayer.GameObject.AddComponent<ReplayPlayer>();
+            rplayer.uniqueId = clientid;
+            MainClass.replayPlayers.Add(clientid, rplayer);
+        }
 
         public void LogData(string str, bool output = true)
         {
@@ -100,32 +63,30 @@ namespace PlayerRecorder
                 Log.Info(str);
         }
 
-        public Dictionary<int, List<IEventType>> replayEvents = new Dictionary<int, List<IEventType>>();
-
         public IEnumerator<float> Replay(string path)
         {
-            replayEvents.Clear();
-            isRecording = false;
-            isReplaying = false;
+            MainClass.replayEvents.Clear();
+            MainClass.isRecording = false;
+            MainClass.isReplaying = false;
             using (var stream = new MemoryStream(File.ReadAllBytes(path)))
             {
-                replayEvents = Serializer.Deserialize<Dictionary<int, List<IEventType>>>(stream);
+                MainClass.replayEvents = Serializer.Deserialize<Dictionary<int, List<IEventType>>>(stream);
             }
-            isReplayReady = true;
-            foreach (var seed in replayEvents)
+            MainClass.isReplayReady = true;
+            foreach (var seed in MainClass.replayEvents)
                 foreach (var seed2 in seed.Value.Where(p => p is SeedData))
-                    RecorderCore.singleton.SeedID = (seed2 as SeedData).Seed;
+                    MainClass.SeedID = (seed2 as SeedData).Seed;
             ReferenceHub.HostHub.playerStats.Roundrestart();
-            int lastFrame = replayEvents.Last().Key;
-            framer = 0;
+            int lastFrame = MainClass.replayEvents.Last().Key;
+            MainClass.framer = 0;
             while (true)
             {
-                if (isReplayPaused || (!isReplaying && isReplayReady))
+                if (MainClass.isReplayPaused || (!MainClass.isReplaying && MainClass.isReplayReady))
                 {
                     yield return Timing.WaitForOneFrame;
                     continue;
                 }
-                if (replayEvents.TryGetValue(framer, out List<IEventType> frames))
+                if (MainClass.replayEvents.TryGetValue(MainClass.framer, out List<IEventType> frames))
                 {
                     string last = "";
                     try
@@ -137,7 +98,7 @@ namespace PlayerRecorder
                             {
                                 case PlayerInfoData pinfo:
                                     LogData($"Player joined {pinfo.UserName} ({pinfo.UserID}) ({pinfo.PlayerID})");
-                                    Timing.RunCoroutine(CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID, RoleType.Spectator));
+                                    Timing.RunCoroutine(CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID));
                                     continue;
                                 case CreatePickupData cpickup:
                                     LogData($"Create pickup {(ItemType)cpickup.ItemType}");
@@ -146,30 +107,30 @@ namespace PlayerRecorder
                                     gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.vector, Quaternion.Euler(new Vector3(0, 0, 0)));
                                     var rpickup = gameObject.AddComponent<ReplayPickup>();
                                     rpickup.uniqueId = cpickup.ItemID;
-                                    replayPickups.Add(cpickup.ItemID, rpickup);
+                                    MainClass.replayPickups.Add(cpickup.ItemID, rpickup);
                                     continue;
                                 case UpdatePlayerData uplayer:
-                                    if (!replayPlayers.ContainsKey(uplayer.PlayerID))
+                                    if (!MainClass.replayPlayers.ContainsKey(uplayer.PlayerID))
                                         continue;
-                                    replayPlayers[uplayer.PlayerID].UpdatePlayer(uplayer);
+                                    MainClass.replayPlayers[uplayer.PlayerID].UpdatePlayer(uplayer);
                                     continue;
                                 case UpdatePickupData upickup:
-                                    if (!replayPickups.ContainsKey(upickup.ItemID))
+                                    if (!MainClass.replayPickups.ContainsKey(upickup.ItemID))
                                         continue;
-                                    replayPickups[upickup.ItemID].UpdatePickup(upickup);
+                                    MainClass.replayPickups[upickup.ItemID].UpdatePickup(upickup);
                                     continue;
                                 case LeaveData lplayer:
                                     LogData($"Player leave {lplayer.PlayerID}");
-                                    if (!replayPlayers.ContainsKey(lplayer.PlayerID))
+                                    if (!MainClass.replayPlayers.ContainsKey(lplayer.PlayerID))
                                         continue;
-                                    var rplayer = replayPlayers[lplayer.PlayerID];
+                                    var rplayer = MainClass.replayPlayers[lplayer.PlayerID];
                                     NetworkServer.Destroy(rplayer.gameObject);
                                     continue;
                                 case RemovePickupData rppickup:
                                     LogData($"Pickup remove {rppickup.ItemID}");
-                                    if (!replayPickups.ContainsKey(rppickup.ItemID))
+                                    if (!MainClass.replayPickups.ContainsKey(rppickup.ItemID))
                                         continue;
-                                    var rrpickup = replayPickups[rppickup.ItemID];
+                                    var rrpickup = MainClass.replayPickups[rppickup.ItemID];
                                     NetworkServer.Destroy(rrpickup.gameObject);
                                     continue;
                                 case DoorData ddata:
@@ -191,9 +152,9 @@ namespace PlayerRecorder
                                     continue;
                                 case UpdateRoleData urole:
                                     LogData($"Update role {(RoleType)urole.RoleID} for player {urole.PlayerID}");
-                                    if (!replayPlayers.ContainsKey(urole.PlayerID))
+                                    if (!MainClass.replayPlayers.ContainsKey(urole.PlayerID))
                                         continue;
-                                    replayPlayers[urole.PlayerID].UpdateRole(urole);
+                                    MainClass.replayPlayers[urole.PlayerID].UpdateRole(urole);
                                     continue;
                                 case LiftData ulift:
                                     LogData($"Use lift");
@@ -203,21 +164,21 @@ namespace PlayerRecorder
                                     continue;
                                 case ShotWeaponData sweapon:
                                     LogData($"Shot weapon {sweapon.PlayerID}");
-                                    if (!replayPlayers.ContainsKey(sweapon.PlayerID))
+                                    if (!MainClass.replayPlayers.ContainsKey(sweapon.PlayerID))
                                         continue;
-                                    replayPlayers[sweapon.PlayerID].ShotWeapon();
+                                    MainClass.replayPlayers[sweapon.PlayerID].ShotWeapon();
                                     continue;
                                 case ReloadWeaponData rweapon:
                                     LogData($"Reload weapon {rweapon.PlayerID}");
-                                    if (!replayPlayers.ContainsKey(rweapon.PlayerID))
+                                    if (!MainClass.replayPlayers.ContainsKey(rweapon.PlayerID))
                                         continue;
-                                    replayPlayers[rweapon.PlayerID].ReloadWeapon();
+                                    MainClass.replayPlayers[rweapon.PlayerID].ReloadWeapon();
                                     continue;
                                 case UpdateHoldingItem ehold:
                                     LogData($"Change holding item {ehold.PlayerID} {ehold.HoldingItem}");
-                                    if (!replayPlayers.ContainsKey(ehold.PlayerID))
+                                    if (!MainClass.replayPlayers.ContainsKey(ehold.PlayerID))
                                         continue;
-                                    replayPlayers[ehold.PlayerID].UpdateHoldingItem(ehold);
+                                    MainClass.replayPlayers[ehold.PlayerID].UpdateHoldingItem(ehold);
                                     continue;
                                 case CreateRagdollData ragdoll:
                                     RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, ragdoll.Velocity.vector, ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
@@ -294,12 +255,12 @@ namespace PlayerRecorder
                         Log.Info(e.ToString() + " failed on  " + last);
                     }
                 }
-                if (lastFrame == framer)
+                if (lastFrame == MainClass.framer)
                     break;
-                framer++;
+                MainClass.framer++;
                 yield return Timing.WaitForOneFrame;
             }
-            replayEvents.Clear();
+            MainClass.replayEvents.Clear();
             Log.Info("Replay ended");
             yield break;
         }

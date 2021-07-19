@@ -26,6 +26,9 @@ namespace PlayerRecorder.Structs
     [ProtoInclude(15, typeof(CreateRagdollData))]
     [ProtoInclude(16, typeof(GeneratorUpdateData))]
     [ProtoInclude(17, typeof(WarheadUpdateData))]
+    [ProtoInclude(18, typeof(Change914KnobData))]
+    [ProtoInclude(19, typeof(OpenCloseGeneratorData))]
+    [ProtoInclude(20, typeof(UnlockGeneratorData))]
     public interface IEventType
     {
     }

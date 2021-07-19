@@ -7,13 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Record
 {
     public class RecordPlayer : MonoBehaviour
     {
         public Vector3 currentPosition = new Vector3(0f, 0f, 0f);
         public Vector2 currentRotation = new Vector2(0f, 0f);
         public ItemType currentHoldingItem = ItemType.None;
+        public RoleType currentRole = RoleType.None;
 
         ReferenceHub _hub;
         public ReferenceHub hub
@@ -40,7 +41,7 @@ namespace PlayerRecorder
 
         private void Update()
         {
-            if (hub?.characterClassManager.NetworkCurClass == RoleType.Spectator || hub?.characterClassManager.NetworkCurClass == RoleType.None || !RecorderCore.isRecording)
+            if (hub?.characterClassManager.NetworkCurClass == RoleType.Spectator || hub?.characterClassManager.NetworkCurClass == RoleType.None || !MainClass.isRecording)
                 return;
 
             if (currentPosition != hub.transform.position || currentRotation != hub.playerMovementSync.Rotations)
@@ -66,6 +67,16 @@ namespace PlayerRecorder
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
                     HoldingItem = (sbyte)hub.inventory.Network_curItemSynced
+                });
+            }
+
+            if (currentRole != hub.characterClassManager.NetworkCurClass)
+            {
+                currentRole = hub.characterClassManager.NetworkCurClass;
+                RecorderCore.OnReceiveEvent(new UpdateRoleData()
+                {
+                    PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
+                    RoleID = (sbyte)currentRole
                 });
             }
         }

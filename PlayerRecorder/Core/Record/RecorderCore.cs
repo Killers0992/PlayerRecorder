@@ -21,66 +21,29 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Record
 {
     public class RecorderCore : MonoBehaviour
     {
         public static RecorderCore singleton;
 
-        public static int currentRoundID = 0;
-
-        public static bool isRecording = false;
-        public static bool isReplaying = false;
-
-        public static bool isReplayReady = false;
-        public static bool isReplayPaused = false;
-
-        public int SeedID = -1;
-
-        public static event EventHandler<RecordPlayer> RegisterRecordPlayer;
-        public static event EventHandler<RecordPlayer> UnRegisterRecordPlayer;
-
-        public static event EventHandler<RecordPickup> RegisterRecordPickup;
-        public static event EventHandler<RecordPickup> UnRegisterRecordPickup;
-
-        public static void OnRegisterRecordPlayer(RecordPlayer recordplayer)
-        {
-            RegisterRecordPlayer.Invoke(null, recordplayer);
-        }
-
-        public static void OnUnRegisterRecordPlayer(RecordPlayer recordplayer)
-        {
-            UnRegisterRecordPlayer.Invoke(null, recordplayer);
-        }
-
-        public static void OnRegisterRecordPickup(RecordPickup recordpickup)
-        {
-            RegisterRecordPickup.Invoke(null, recordpickup);
-        }
-
-        public static void OnUnRegisterRecordPickup(RecordPickup recordpickup)
-        {
-            UnRegisterRecordPickup.Invoke(null, recordpickup);
-        }
-
         public static void OnReceiveEvent(IEventType eventObject)
         {
-            if (!curDir.ContainsKey(currentRoundID))
-                curDir.Add(currentRoundID, new Dictionary<int, List<IEventType>>());
-            if (curDir[currentRoundID].ContainsKey(framer))
+            if (!MainClass.curDir.ContainsKey(MainClass.currentRoundID))
+                MainClass.curDir.Add(MainClass.currentRoundID, new Dictionary<int, List<IEventType>>());
+            if (MainClass.curDir[MainClass.currentRoundID].ContainsKey(MainClass.framer))
             {
-                curDir[currentRoundID][framer].Add(eventObject);
+                MainClass.curDir[MainClass.currentRoundID][MainClass.framer].Add(eventObject);
             }
             else
             {
-                curDir[currentRoundID].Add(framer, new List<IEventType>() { eventObject });
+                MainClass.curDir[MainClass.currentRoundID].Add(MainClass.framer, new List<IEventType>() { eventObject });
             }
         }
 
-        public EventHandlers handler;
-
-        void Awake()
+        void Start()
         {
+            DontDestroyOnLoad(this);
             singleton = this;
             Timing.RunCoroutine(PickupsWatcher());
         }
@@ -89,6 +52,11 @@ namespace PlayerRecorder
         {
             while (true)
             {
+                if (!MainClass.isRecording)
+                {
+                    yield return Timing.WaitForSeconds(0.1f);
+                    continue;
+                }
                 try
                 {
                     foreach (var item in UnityEngine.Object.FindObjectsOfType<Pickup>())
@@ -104,11 +72,10 @@ namespace PlayerRecorder
             }
         }
 
-        public IEnumerator<float> Process()
+        public static IEnumerator<float> Process(int round)
         {
-            int round = currentRoundID;
-            currentRoundID++;
-            if (curDir.TryGetValue(round, out Dictionary<int, List<IEventType>> events))
+            Log.Info("Save frames from round " + round);
+            if (MainClass.curDir.TryGetValue(round, out Dictionary<int, List<IEventType>> events))
             {
                 Log.Info("Process started");
                 var recordingStream = new FileStream(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}", $"Record_{DateTime.Now.Ticks}.rd"), FileMode.CreateNew);
@@ -116,23 +83,21 @@ namespace PlayerRecorder
                 recordingStream.Flush();
                 recordingStream.Close();
                 Log.Info("Process ended, saved " + events.Count + " frames.");
-                curDir.Remove(round);
+                MainClass.curDir.Remove(round);
+            }
+            else
+            {
+                Log.Info("Frames not found in round " + round);
             }
             yield break;
         }
 
-        public static Dictionary<int, Dictionary<int, List<IEventType>>> curDir = new Dictionary<int, Dictionary<int, List<IEventType>>>();
-
-
-        public static int framer;
-
         void Update()
         {
-            if (isRecording)
-                framer++;
+            if (MainClass.isRecording && !EventHandlers.waitingforplayers)
+                MainClass.framer++;
         }
 
-        public static Dictionary<int, RecordPickup> recordPickups = new Dictionary<int, RecordPickup>();
 
 
         public void StartRecording()

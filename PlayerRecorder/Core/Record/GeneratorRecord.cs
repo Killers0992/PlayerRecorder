@@ -7,12 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace PlayerRecorder
+namespace PlayerRecorder.Core.Record
 {
     public class GeneratorRecord : MonoBehaviour
     {
         public bool TabletConnected { get; set; } = false;
-
 
         Generator079 _generator;
         public Generator079 generator
@@ -25,13 +24,10 @@ namespace PlayerRecorder
             }
         }
 
-        void Awake()
-        {
-            Log.Info($"Generator record init.");
-        }
-
         private void Update()
         {
+            if (!MainClass.isRecording)
+                return;
             if (TabletConnected != generator.NetworkisTabletConnected)
             {
                 TabletConnected = generator.NetworkisTabletConnected;
