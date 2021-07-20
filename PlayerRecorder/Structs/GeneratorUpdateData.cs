@@ -11,6 +11,8 @@ namespace PlayerRecorder.Structs
         [ProtoMember(2)]
         public byte TotalVoltage { get; set; }
         [ProtoMember(3)]
+        public float RemainingPowerup { get; set; }
+        [ProtoMember(4)]
         public Vector3Data Position { get; set; }
     }
 }

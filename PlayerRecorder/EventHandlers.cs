@@ -15,26 +15,21 @@ namespace PlayerRecorder
     {
         private RecordCore core;
         private ReplayCore core2;
-        public bool firstrun = false;
+        public bool firstrun = true;
         public EventHandlers(RecordCore core, ReplayCore core2)
         {
             this.core = core;
             this.core2 = core2;
             Exiled.Events.Handlers.Server.WaitingForPlayers += WaitingForPlayers;
             Exiled.Events.Handlers.Server.RestartingRound += Server_RestartingRound1;
-            Exiled.Events.Handlers.Player.InteractingElevator += Player_InteractingElevator;
             Exiled.Events.Handlers.Player.Shot += Player_Shot;
             Exiled.Events.Handlers.Player.ReloadingWeapon += Player_ReloadingWeapon;
             Exiled.Events.Handlers.Player.SpawningRagdoll += Player_SpawningRagdoll;
-            Exiled.Events.Handlers.Player.UnlockingGenerator += Player_UnlockingGenerator;
-            Exiled.Events.Handlers.Player.OpeningGenerator += Player_OpeningGenerator;
-            Exiled.Events.Handlers.Player.ClosingGenerator += Player_ClosingGenerator;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting += Scp914_ChangingKnobSetting;
             Exiled.Events.Handlers.Player.Verified += Player_Verified;
             Exiled.Events.Handlers.Map.PlacingDecal += Map_PlacingDecal;
             Exiled.Events.Handlers.Map.PlacingBlood += Map_PlacingBlood;
             Exiled.Events.Handlers.Map.AnnouncingScpTermination += Map_AnnouncingScpTermination;
-            firstrun = true;
         }
 
         private void Map_PlacingBlood(PlacingBloodEventArgs ev)
@@ -92,38 +87,6 @@ namespace PlayerRecorder
             });
         }
 
-        private void Player_ClosingGenerator(Exiled.Events.EventArgs.ClosingGeneratorEventArgs ev)
-        {
-            if (!MainClass.isRecording)
-                return;
-            RecordCore.OnReceiveEvent(new OpenCloseGeneratorData()
-            {
-                IsOpen = false,
-                Position = new Vector3Data() { x = ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z }
-            });
-        }
-
-        private void Player_OpeningGenerator(Exiled.Events.EventArgs.OpeningGeneratorEventArgs ev)
-        {
-            if (!MainClass.isRecording)
-                return;
-            RecordCore.OnReceiveEvent(new OpenCloseGeneratorData()
-            {
-                IsOpen = true,
-                Position = new Vector3Data() { x = ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z }
-            });
-        }
-
-        private void Player_UnlockingGenerator(Exiled.Events.EventArgs.UnlockingGeneratorEventArgs ev)
-        {
-            if (!MainClass.isRecording)
-                return;
-            RecordCore.OnReceiveEvent(new UnlockGeneratorData()
-            {
-                Position = new Vector3Data() { x= ev.Generator.transform.position.x, y = ev.Generator.transform.position.y, z = ev.Generator.transform.position.z}
-            });
-        }
-
         private void Player_SpawningRagdoll(Exiled.Events.EventArgs.SpawningRagdollEventArgs ev)
         {
             if (!MainClass.isRecording)
@@ -161,20 +124,9 @@ namespace PlayerRecorder
             });
         }
 
-        private void Player_InteractingElevator(Exiled.Events.EventArgs.InteractingElevatorEventArgs ev)
-        {
-            if (!MainClass.isRecording)
-                return;
-            if (ev.Status == Lift.Status.Moving)
-                return;
-            RecordCore.OnReceiveEvent(new LiftData()
-            {
-                Elevatorname = ev.Lift.elevatorName
-            });
-        }
-
         private void Server_RestartingRound1()
         {
+            ReplayCache.ClearCache();
             MainClass.isRecording = false;
             Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID));
             MainClass.currentRoundID++;
@@ -211,6 +163,7 @@ namespace PlayerRecorder
             }
             else
             {
+                MainClass.RoundTimestamp = DateTime.Now;
                 core.StartRecording();
                 MainClass.framer = 0;
                 Log.Info("New recorder instance created.");
@@ -222,6 +175,10 @@ namespace PlayerRecorder
                 foreach (var door in UnityEngine.Object.FindObjectsOfType<DoorVariant>())
                 {
                     door.gameObject.AddComponent<DoorRecord>();
+                }
+                foreach(var lift in UnityEngine.Object.FindObjectsOfType<Lift>())
+                {
+                    lift.gameObject.AddComponent<LiftRecord>();
                 }
                 AlphaWarheadController.Host.gameObject.AddComponent<WarheadRecord>();
             }

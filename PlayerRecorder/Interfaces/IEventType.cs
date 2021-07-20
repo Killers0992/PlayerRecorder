@@ -26,6 +26,7 @@ namespace PlayerRecorder.Interfaces
     [ProtoInclude(20, typeof(UnlockGeneratorData))]
     [ProtoInclude(21, typeof(ScpTerminationData))]
     [ProtoInclude(22, typeof(PlaceDecalData))]
+    [ProtoInclude(23, typeof(DoorDestroyData))]
     public interface IEventType
     {
     }

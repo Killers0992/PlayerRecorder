@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
@@ -63,205 +64,79 @@ namespace PlayerRecorder.Core.Replay
             MainClass.replayPlayers.Add(clientid, rplayer);
         }
 
-        public void LogData(string str, bool output = true)
+        public Role GetRoleByName(string name)
         {
-            if (MainClass.singleton.Config.debug)
-                Log.Info(str);
+            var roles = ReferenceHub.HostHub.characterClassManager.Classes;
+            foreach(var role in roles)
+            {
+                if (role.fullName == name)
+                    return role;
+            }
+            return null;
         }
 
-        public int lastFrame = 9999;
-        public int lastExecutedEvents = 0;
 
-        void Update()
+
+
+        public DoorVariant GetBestDoor(Vector3 position)
         {
-            if (MainClass.isReplayPaused || (!MainClass.isReplaying && MainClass.isReplayReady) || !MainClass.isReplayReady)
+            if (ReplayCache.DoorCache.TryGetValue(position, out DoorVariant door))
+                return door;
+
+            DoorVariant bestDoor = null;
+            float bestDistance = 999f;
+            foreach (var dor in UnityEngine.Object.FindObjectsOfType<DoorVariant>())
             {
-                return;
-            }
-            Log.Info($"Replay {MainClass.framer}/{lastFrame}, executed {lastExecutedEvents}");
-            if (MainClass.replayEvents.TryGetValue(MainClass.framer, out List<IEventType> frames))
-            {
-                try
+                float distance = Vector3.Distance(dor.transform.position, position);
+                if (distance < bestDistance)
                 {
-                    lastExecutedEvents = frames.Count;
-                    foreach (var ev in frames)
-                    {
-                        switch (ev)
-                        {
-                            case PlayerInfoData pinfo:
-                                LogData($"Player joined {pinfo.UserName} ({pinfo.UserID}) ({pinfo.PlayerID})");
-                                Timing.RunCoroutine(CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID));
-                                continue;
-                            case CreatePickupData cpickup:
-                                LogData($"Create pickup {(ItemType)cpickup.ItemType}");
-                                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
-                                NetworkServer.Spawn(gameObject);
-                                gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.vector, Quaternion.Euler(new Vector3(0, 0, 0)));
-                                var rpickup = gameObject.AddComponent<ReplayPickup>();
-                                rpickup.uniqueId = cpickup.ItemID;
-                                MainClass.replayPickups.Add(cpickup.ItemID, rpickup);
-                                continue;
-                            case UpdatePlayerData uplayer:
-                                if (!MainClass.replayPlayers.ContainsKey(uplayer.PlayerID))
-                                    continue;
-                                MainClass.replayPlayers[uplayer.PlayerID].UpdatePlayer(uplayer);
-                                continue;
-                            case UpdatePickupData upickup:
-                                if (!MainClass.replayPickups.ContainsKey(upickup.ItemID))
-                                    continue;
-                                MainClass.replayPickups[upickup.ItemID].UpdatePickup(upickup);
-                                continue;
-                            case LeaveData lplayer:
-                                LogData($"Player leave {lplayer.PlayerID}");
-                                if (!MainClass.replayPlayers.ContainsKey(lplayer.PlayerID))
-                                    continue;
-                                var rplayer = MainClass.replayPlayers[lplayer.PlayerID];
-                                NetworkServer.Destroy(rplayer.gameObject);
-                                continue;
-                            case RemovePickupData rppickup:
-                                LogData($"Pickup remove {rppickup.ItemID}");
-                                if (!MainClass.replayPickups.ContainsKey(rppickup.ItemID))
-                                    continue;
-                                var rrpickup = MainClass.replayPickups[rppickup.ItemID];
-                                NetworkServer.Destroy(rrpickup.gameObject);
-                                continue;
-                            case DoorData ddata:
-                                DoorVariant bestDoor = null;
-                                float bestDistance = 999f;
-                                foreach (var dor in UnityEngine.Object.FindObjectsOfType<DoorVariant>())
-                                {
-                                    float distance = Vector3.Distance(dor.transform.position, ddata.Position.vector);
-                                    if (distance < bestDistance)
-                                    {
-                                        bestDoor = dor;
-                                        bestDistance = distance;
-                                    }
-                                }
-                                if (bestDoor != null)
-                                {
-                                    bestDoor.NetworkActiveLocks = ddata.ActiveLocks;
-                                    bestDoor.NetworkTargetState = ddata.State;
-                                }
-                                continue;
-                            case UpdateRoleData urole:
-                                LogData($"Update role {(RoleType)urole.RoleID} for player {urole.PlayerID}");
-                                if (!MainClass.replayPlayers.ContainsKey(urole.PlayerID))
-                                    continue;
-                                MainClass.replayPlayers[urole.PlayerID].UpdateRole(urole);
-                                continue;
-                            case LiftData ulift:
-                                LogData($"Use lift");
-                                foreach (var lift2 in UnityEngine.Object.FindObjectsOfType<Lift>())
-                                    if (lift2.elevatorName == ulift.Elevatorname && lift2.status != Lift.Status.Moving)
-                                        lift2.UseLift();
-                                continue;
-                            case ShotWeaponData sweapon:
-                                LogData($"Shot weapon {sweapon.PlayerID}");
-                                if (!MainClass.replayPlayers.ContainsKey(sweapon.PlayerID))
-                                    continue;
-                                MainClass.replayPlayers[sweapon.PlayerID].ShotWeapon();
-                                continue;
-                            case ReloadWeaponData rweapon:
-                                LogData($"Reload weapon {rweapon.PlayerID}");
-                                if (!MainClass.replayPlayers.ContainsKey(rweapon.PlayerID))
-                                    continue;
-                                MainClass.replayPlayers[rweapon.PlayerID].ReloadWeapon();
-                                continue;
-                            case UpdateHoldingItem ehold:
-                                LogData($"Change holding item {ehold.PlayerID} {ehold.HoldingItem}");
-                                if (!MainClass.replayPlayers.ContainsKey(ehold.PlayerID))
-                                    continue;
-                                MainClass.replayPlayers[ehold.PlayerID].UpdateHoldingItem(ehold);
-                                continue;
-                            case CreateRagdollData ragdoll:
-                                RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, ragdoll.Velocity.vector, ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
-                                continue;
-                            case GeneratorUpdateData genupdate:
-                                Generator079 bestGen = null;
-                                float bestDist = 999f;
-                                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
-                                {
-                                    float distance = Vector3.Distance(gen.transform.position, genupdate.Position.vector);
-                                    if (distance < bestDist)
-                                    {
-                                        bestGen = gen;
-                                        bestDist = distance;
-                                    }
-                                }
-                                if (bestGen != null)
-                                {
-                                    bestGen.NetworkisTabletConnected = genupdate.TabletConnected;
-                                    bestGen.NetworktotalVoltage = genupdate.TotalVoltage;
-                                }
-                                continue;
-                            case UnlockGeneratorData genunlock:
-                                Generator079 bestGen2 = null;
-                                float bestDist2 = 999f;
-                                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
-                                {
-                                    float distance = Vector3.Distance(gen.transform.position, genunlock.Position.vector);
-                                    if (distance < bestDist2)
-                                    {
-                                        bestGen2 = gen;
-                                        bestDist2 = distance;
-                                    }
-                                }
-                                if (bestGen2 != null)
-                                {
-                                    bestGen2.NetworkisDoorUnlocked = true;
-                                }
-                                continue;
-                            case OpenCloseGeneratorData genoc:
-                                Generator079 bestGen3 = null;
-                                float bestDist3 = 999f;
-                                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
-                                {
-                                    float distance = Vector3.Distance(gen.transform.position, genoc.Position.vector);
-                                    if (distance < bestDist3)
-                                    {
-                                        bestGen3 = gen;
-                                        bestDist3 = distance;
-                                    }
-                                }
-                                if (bestGen3 != null)
-                                {
-                                    bestGen3.NetworkisDoorOpen = genoc.IsOpen;
-                                }
-                                continue;
-                            case Change914KnobData knobData:
-                                Scp914.Scp914Machine.singleton.NetworkknobState = (Scp914.Scp914Knob)knobData.KnobSetting;
-                                continue;
-                            case WarheadUpdateData warheadData:
-                                AlphaWarheadController.Host.NetworktimeToDetonation = warheadData.TimeToDetonation;
-                                AlphaWarheadController.Host.NetworksyncResumeScenario = warheadData.ResumeScenario;
-                                AlphaWarheadController.Host.NetworksyncStartScenario = warheadData.StartScenario;
-                                AlphaWarheadController.Host.NetworkinProgress = warheadData.InProgress;
-                                continue;
-                            case ScpTerminationData scpterm:
-                                var role = new Role();
-                                role.fullName = scpterm.RoleFullName;
-                                NineTailedFoxAnnouncer.AnnounceScpTermination(role, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(scpterm.ToolID), 0), scpterm.GroupID);
-                                continue;
-                            case PlaceDecalData placeDecal:
-                                WeaponManager.RpcPlaceDecal(placeDecal.IsBlood, placeDecal.Type, placeDecal.Position.vector, placeDecal.Rotation.quaternion);
-                                continue;
-                            case RoundEndData end:
-                                LogData($"Round ended");
-                                continue;
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Info(e.ToString());
+                    bestDoor = dor;
+                    bestDistance = distance;
                 }
             }
-            if (lastFrame == MainClass.framer)
+
+            ReplayCache.DoorCache.Add(position, bestDoor);
+            return bestDoor;
+        }
+
+        public Generator079 GetBestGenerator(Vector3 position)
+        {
+            if (ReplayCache.GeneratorCache.TryGetValue(position, out Generator079 generator))
+                return generator;
+
+            Generator079 bestGen = null;
+            float bestDist = 999f;
+            foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
             {
-                MainClass.isReplaying = false;
-                return;
+                float distance = Vector3.Distance(gen.transform.position, position);
+                if (distance < bestDist)
+                {
+                    bestGen = gen;
+                    bestDist = distance;
+                }
             }
-            MainClass.framer++;
+
+            ReplayCache.GeneratorCache.Add(position, bestGen);
+            return bestGen;
+        }
+
+
+
+        public Lift GetElevatorByName(string elevatorName)
+        {
+            if (ReplayCache.ElevatorCache.TryGetValue(elevatorName, out Lift elevator))
+                return elevator;
+
+            foreach (var lift in UnityEngine.Object.FindObjectsOfType<Lift>())
+            {
+                if (lift.elevatorName == elevatorName)
+                {
+                    ReplayCache.ElevatorCache.Add(elevatorName, lift);
+                    return lift;
+                }
+            }
+
+            return null;
         }
 
         public IEnumerator<float> Replay(string path)
@@ -278,8 +153,144 @@ namespace PlayerRecorder.Core.Replay
                     MainClass.SeedID = (seed2 as SeedData).Seed;
             ReferenceHub.HostHub.playerStats.Roundrestart();
             MainClass.framer = 0;
-            lastFrame = MainClass.replayEvents.Last().Key;
+            MainClass.LastFrame = MainClass.replayEvents.Last().Key;
             MainClass.isReplayReady = true;
+            while (true)
+            {
+                if (MainClass.isReplayPaused || (!MainClass.isReplaying && MainClass.isReplayReady) || !MainClass.isReplayReady)
+                {
+                    goto skipFor;
+                }
+
+                if (MainClass.replayEvents.TryGetValue(MainClass.framer, out List<IEventType> frames))
+                {
+                    try
+                    {
+                        MainClass.LastExecutedEvents = frames.Count;
+                        foreach (var ev in frames)
+                        {
+                            switch (ev)
+                            {
+                                case PlayerInfoData pinfo:
+                                    Timing.RunCoroutine(CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID));
+                                    continue;
+                                case CreatePickupData cpickup:
+                                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
+                                    gameObject.GetComponent<Rigidbody>().isKinematic = false;
+                                    NetworkServer.Spawn(gameObject);
+                                    gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.vector, Quaternion.Euler(new Vector3(0, 0, 0)));
+                                    var rpickup = gameObject.AddComponent<ReplayPickup>();
+                                    rpickup.uniqueId = cpickup.ItemID;
+                                    MainClass.replayPickups.Add(cpickup.ItemID, rpickup);
+                                    continue;
+                                case UpdatePlayerData uplayer:
+                                    if (MainClass.replayPlayers.TryGetValue(uplayer.PlayerID, out ReplayPlayer updatePlayer))
+                                        updatePlayer.UpdatePlayer(uplayer);
+                                    continue;
+                                case UpdatePickupData upickup:
+                                    if (MainClass.replayPickups.TryGetValue(upickup.ItemID, out ReplayPickup updatePickup))
+                                        updatePickup.UpdatePickup(upickup);
+                                    continue;
+                                case LeaveData lplayer:
+                                    if (MainClass.replayPlayers.TryGetValue(lplayer.PlayerID, out ReplayPlayer removePlayer))
+                                        NetworkServer.Destroy(removePlayer.gameObject);
+                                    continue;
+                                case RemovePickupData rppickup:
+                                    if (MainClass.replayPickups.TryGetValue(rppickup.ItemID, out ReplayPickup removePickup))
+                                        NetworkServer.Destroy(removePickup.gameObject);
+                                    continue;
+                                case DoorData ddata:
+                                    DoorVariant door = GetBestDoor(ddata.Position.vector);
+                                    if (door.NetworkTargetState != ddata.State)
+                                        door.NetworkTargetState = ddata.State;
+
+                                    if (door.NetworkActiveLocks != ddata.ActiveLocks)
+                                        door.NetworkActiveLocks = ddata.ActiveLocks;
+                                    continue;
+                                case DoorDestroyData dddata:
+                                    DoorVariant breakableDoor = GetBestDoor(dddata.Position.vector);
+                                    if (breakableDoor is BreakableDoor brdoor)
+                                    {
+                                        if (!brdoor.Network_destroyed)
+                                            brdoor.Network_destroyed = true;
+                                    }
+                                    continue;
+                                case UpdateRoleData urole:
+                                    if (MainClass.replayPlayers.TryGetValue(urole.PlayerID, out ReplayPlayer updatePlayerRole))
+                                        updatePlayerRole.UpdateRole(urole);
+                                    continue;
+                                case LiftData ulift:
+                                    Lift lift = GetElevatorByName(ulift.Elevatorname);
+                                    if (lift.NetworkstatusID != ulift.StatusID)
+                                        lift.NetworkstatusID = ulift.StatusID;
+
+                                    if (lift.Network_locked != ulift.IsLocked)
+                                        lift.Network_locked = ulift.IsLocked;
+                                    continue;
+                                case ShotWeaponData sweapon:
+                                    if (MainClass.replayPlayers.TryGetValue(sweapon.PlayerID, out ReplayPlayer playerShot))
+                                        playerShot.ShotWeapon();
+                                    continue;
+                                case ReloadWeaponData rweapon:
+                                    if (MainClass.replayPlayers.TryGetValue(rweapon.PlayerID, out ReplayPlayer playerReload))
+                                        playerReload.ReloadWeapon();
+                                    continue;
+                                case UpdateHoldingItem ehold:
+                                    if (MainClass.replayPlayers.TryGetValue(ehold.PlayerID, out ReplayPlayer playerUpdateHold))
+                                        playerUpdateHold.UpdateHoldingItem(ehold);
+                                    continue;
+                                case CreateRagdollData ragdoll:
+                                    RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, ragdoll.Velocity.vector, ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
+                                    continue;
+                                case GeneratorUpdateData genupdate:
+                                    Generator079 generator = GetBestGenerator(genupdate.Position.vector);
+                                    generator.NetworkisTabletConnected = genupdate.TabletConnected;
+                                    generator.NetworktotalVoltage = genupdate.TotalVoltage;
+                                    generator.NetworkremainingPowerup = genupdate.RemainingPowerup;
+                                    continue;
+                                case UnlockGeneratorData genunlock:
+                                    Generator079 genDoor = GetBestGenerator(genunlock.Position.vector);
+                                    genDoor.NetworkisDoorUnlocked = true;
+                                    continue;
+                                case OpenCloseGeneratorData genoc:
+                                    Generator079 genDoor2 = GetBestGenerator(genoc.Position.vector);
+                                    genDoor2.NetworkisDoorOpen = genoc.IsOpen;
+                                    continue;
+                                case Change914KnobData knobData:
+                                    Scp914.Scp914Machine.singleton.NetworkknobState = (Scp914.Scp914Knob)knobData.KnobSetting;
+                                    continue;
+                                case WarheadUpdateData warheadData:
+                                    AlphaWarheadController.Host.NetworktimeToDetonation = warheadData.TimeToDetonation;
+                                    AlphaWarheadController.Host.NetworksyncResumeScenario = warheadData.ResumeScenario;
+                                    AlphaWarheadController.Host.NetworksyncStartScenario = warheadData.StartScenario;
+                                    AlphaWarheadController.Host.NetworkinProgress = warheadData.InProgress;
+                                    continue;
+                                case ScpTerminationData scpterm:
+                                    NineTailedFoxAnnouncer.AnnounceScpTermination(GetRoleByName(scpterm.RoleFullName), new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(scpterm.ToolID), 0), scpterm.GroupID);
+                                    continue;
+                                case PlaceDecalData placeDecal:
+                                    WeaponManager.RpcPlaceDecal(placeDecal.IsBlood, placeDecal.Type, placeDecal.Position.vector, placeDecal.Rotation.quaternion);
+                                    continue;
+                                case RoundEndData end:
+                                    Map.Broadcast(3, $"Round ended");
+                                    continue;
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Info(e.ToString());
+                    }
+                }
+                if (MainClass.LastFrame < MainClass.framer)
+                {
+                    MainClass.isReplaying = false;
+                    break;
+                }
+                MainClass.framer++;
+                skipFor:
+                yield return Timing.WaitForSeconds(MainClass.singleton.Config.replayDelay);
+            }
             yield break;
         }
     }

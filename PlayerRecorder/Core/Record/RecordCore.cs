@@ -18,23 +18,23 @@ namespace PlayerRecorder.Core.Record
 
         public static void OnReceiveEvent(IEventType eventObject)
         {
-            if (!MainClass.curDir.ContainsKey(MainClass.currentRoundID))
-                MainClass.curDir.Add(MainClass.currentRoundID, new Dictionary<int, List<IEventType>>());
-            if (MainClass.curDir[MainClass.currentRoundID].ContainsKey(MainClass.framer))
+            if (!MainClass.recordFrames.ContainsKey(MainClass.currentRoundID))
+                MainClass.recordFrames.Add(MainClass.currentRoundID, new Dictionary<int, List<IEventType>>());
+            if (MainClass.recordFrames[MainClass.currentRoundID].ContainsKey(MainClass.framer))
             {
-                MainClass.curDir[MainClass.currentRoundID][MainClass.framer].Add(eventObject);
+                MainClass.recordFrames[MainClass.currentRoundID][MainClass.framer].Add(eventObject);
             }
             else
             {
-                MainClass.curDir[MainClass.currentRoundID].Add(MainClass.framer, new List<IEventType>() { eventObject });
+                MainClass.recordFrames[MainClass.currentRoundID].Add(MainClass.framer, new List<IEventType>() { eventObject });
             }
         }
 
-        void Start()
+        void Awake()
         {
-            DontDestroyOnLoad(this);
             singleton = this;
             Timing.RunCoroutine(PickupsWatcher());
+            Timing.RunCoroutine(FrameRecord());
         }
 
         public IEnumerator<float> PickupsWatcher()
@@ -42,10 +42,7 @@ namespace PlayerRecorder.Core.Record
             while (true)
             {
                 if (!MainClass.isRecording)
-                {
-                    yield return Timing.WaitForSeconds(0.1f);
-                    continue;
-                }
+                    goto skipFor;
                 try
                 {
                     foreach (var item in UnityEngine.Object.FindObjectsOfType<Pickup>())
@@ -57,43 +54,40 @@ namespace PlayerRecorder.Core.Record
                     }
                 }
                 catch (Exception) { }
+                skipFor:
                 yield return Timing.WaitForSeconds(0.1f);
             }
         }
 
         public static IEnumerator<float> Process(int round)
         {
-            Log.Info("Save frames from round " + round);
-            if (MainClass.curDir.TryGetValue(round, out Dictionary<int, List<IEventType>> events))
+            if (MainClass.recordFrames.TryGetValue(round, out Dictionary<int, List<IEventType>> events))
             {
-                Log.Info("Process started");
-                var recordingStream = new FileStream(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}", $"Record_{DateTime.Now.Ticks}.rd"), FileMode.CreateNew);
+                var recordingStream = new FileStream(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}", $"Record_{MainClass.RoundTimestamp.Ticks}.rd"), FileMode.CreateNew);
                 Serializer.Serialize(recordingStream, events);
                 recordingStream.Flush();
                 recordingStream.Close();
-                Log.Info("Process ended, saved " + events.Count + " frames.");
-                MainClass.curDir.Remove(round);
-            }
-            else
-            {
-                Log.Info("Frames not found in round " + round);
+                MainClass.recordFrames.Remove(round);
             }
             yield break;
         }
 
-        void Update()
+
+        public IEnumerator<float> FrameRecord()
         {
-            if (MainClass.isRecording)
-                MainClass.framer++;
+            while (true)
+            {
+                if (MainClass.isRecording)
+                    MainClass.framer++;
+                yield return Timing.WaitForSeconds(MainClass.singleton.Config.recordDelay);
+            }
         }
-
-
 
         public void StartRecording()
         {
             OnReceiveEvent(new SeedData()
             {
-                Seed = UnityEngine.Object.FindObjectsOfType<SeedSynchronizer>()[0].Network_syncSeed
+                Seed = SeedSynchronizer._singleton.Network_syncSeed
             });
         }
     }

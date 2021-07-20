@@ -14,6 +14,8 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,8 +36,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\..\FastRoundrestart\FastRoundrestart\bin\Debug\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Output\dependencies\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="0NPCS">
       <HintPath>C:\Users\Killers0992\Downloads\0NPCS.dll</HintPath>
@@ -74,8 +77,8 @@
     <Reference Include="Exiled.Updater, Version=3.1.1.0, Culture=neutral, processorArchitecture=AMD64">
       <HintPath>..\packages\EXILED.2.10.0-beta\lib\net472\Exiled.Updater.dll</HintPath>
     </Reference>
-    <Reference Include="Mirror_publicized">
-      <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\publicized_assemblies\Mirror_publicized.dll</HintPath>
+    <Reference Include="Mirror">
+      <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\Mirror.dll</HintPath>
     </Reference>
     <Reference Include="NorthwoodLib">
       <HintPath>..\..\..\..\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\NorthwoodLib.dll</HintPath>
@@ -122,6 +125,9 @@
     <Compile Include="Commands\PauseCommand.cs" />
     <Compile Include="Commands\StartCommand.cs" />
     <Compile Include="Core\Record\DoorRecord.cs" />
+    <Compile Include="Core\Record\LiftRecord.cs" />
+    <Compile Include="Core\Replay\ReplayCache.cs" />
+    <Compile Include="Core\Replay\ReplayHud.cs" />
     <Compile Include="EventHandlers.cs" />
     <Compile Include="Core\Record\GeneratorRecord.cs" />
     <Compile Include="MainClass.cs" />
@@ -133,6 +139,7 @@
     <Compile Include="Structs\Change914KnobData.cs" />
     <Compile Include="Structs\CreateRagdollData.cs" />
     <Compile Include="Structs\DoorData.cs" />
+    <Compile Include="Structs\DoorDestroyData.cs" />
     <Compile Include="Structs\GeneratorUpdateData.cs" />
     <Compile Include="Interfaces\IEventType.cs" />
     <Compile Include="Structs\LeaveData.cs" />
@@ -170,4 +177,29 @@
     <PostBuildEvent>xcopy /y ".\PlayerRecorder.dll" "..\..\..\Output"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Ce projet fait référence à des packages NuGet qui sont manquants sur cet ordinateur. Utilisez l'option de restauration des packages NuGet pour les télécharger. Pour plus d'informations, consultez http://go.microsoft.com/fwlink/?LinkID=322105. Le fichier manquant est : {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets'))" />
+  </Target>
+  <Target Name="ILRepack" AfterTargets="Build">
+    <PropertyGroup>
+      <WorkingDirectory>$(OutputPath)</WorkingDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)/$(AssemblyName).dll" />
+      <InputAssemblies Include="$(OutputPath)/protobuf-net.Core.dll" />
+      <InputAssemblies Include="$(OutputPath)/protobuf-net.dll" />
+      <IlRepackLibs Include="$(OutputPath)" />
+    </ItemGroup>
+    <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(OutputAssembly)" Importance="High" />
+    <ILRepack Internalize="true" LibraryPath="@(IlRepackLibs)" OutputFile="$(OutputPath)/$(AssemblyName).dll" InputAssemblies="@(InputAssemblies)" />
+    <Move SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFiles="$(OutputPath)$(AssemblyName).dll" />
+  </Target>
+  <Target Name="CopyToMods" AfterTargets="ILRepack" Condition="'$(NCrunch)' != '1'">
+    <Message Text="Copying $(OutputPath)$(AssemblyName).dll to folder" Importance="high" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFiles="$(MelonLoaderPath)\..\UserData\$(AssemblyName).dll" />
+  </Target>
 </Project>

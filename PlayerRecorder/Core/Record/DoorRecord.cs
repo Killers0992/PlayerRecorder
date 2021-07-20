@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
 using PlayerRecorder.Structs;
 using System;
@@ -13,6 +14,7 @@ namespace PlayerRecorder.Core.Record
     public class DoorRecord : MonoBehaviour
     {
         public bool IsOpen { get; set; } = false;
+        public bool IsDestroyed { get; set; } = false;
         public ushort ActiveLocks { get; set; }
 
         DoorVariant _door;
@@ -40,6 +42,17 @@ namespace PlayerRecorder.Core.Record
                     ActiveLocks = ActiveLocks,
                     Position = new Vector3Data() { x = door.transform.position.x, y = door.transform.position.y, z = door.transform.position.z },
                 });
+            }
+            if (door is BreakableDoor dr)
+            {
+                if (IsDestroyed != dr.Network_destroyed)
+                {
+                    IsDestroyed = dr.Network_destroyed;
+                    RecordCore.OnReceiveEvent(new DoorDestroyData()
+                    {
+                        Position = new Vector3Data() { x = door.transform.position.x, y = door.transform.position.y, z = door.transform.position.z },
+                    });
+                }
             }
         }
     }

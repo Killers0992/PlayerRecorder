@@ -23,6 +23,7 @@ namespace PlayerRecorder
         public RecordCore core;
         public ReplayCore core2;
         private EventHandlers eventHandlers;
+        private ReplayHud hud;
 
         public static MainClass singleton;
 
@@ -37,6 +38,7 @@ namespace PlayerRecorder
             core = CustomNetworkManager.singleton.gameObject.AddComponent<RecordCore>();
             core2 = CustomNetworkManager.singleton.gameObject.AddComponent<ReplayCore>();
             eventHandlers = new EventHandlers(core, core2);
+            hud = new ReplayHud();
             HarmonyLib.Harmony hrm = new HarmonyLib.Harmony("Patcher.recorder");
             hrm.PatchAll();
             base.OnEnabled();
@@ -51,12 +53,17 @@ namespace PlayerRecorder
         public static bool isReplayReady = false;
         public static bool isReplayPaused = false;
 
+        public static int LastFrame = 9999;
+        public static int LastExecutedEvents = 0;
+
         public static int SeedID = -1;
 
-        public static Dictionary<int, Dictionary<int, List<IEventType>>> curDir = new Dictionary<int, Dictionary<int, List<IEventType>>>();
+        public static Dictionary<int, Dictionary<int, List<IEventType>>> recordFrames = new Dictionary<int, Dictionary<int, List<IEventType>>>();
         public static Dictionary<int, RecordPickup> recordPickups = new Dictionary<int, RecordPickup>();
         public static int framer;
 
+        public static DateTime RoundTimestamp { get; set; }
+        
         public static Dictionary<int, ReplayPlayer> replayPlayers = new Dictionary<int, ReplayPlayer>();
         public static Dictionary<int, ReplayPickup> replayPickups = new Dictionary<int, ReplayPickup>();
 

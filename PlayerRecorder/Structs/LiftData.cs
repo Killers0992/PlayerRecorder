@@ -8,5 +8,9 @@ namespace PlayerRecorder.Structs
     {
         [ProtoMember(1)]
         public string Elevatorname { get; set; }
+        [ProtoMember(2)]
+        public byte StatusID { get; set; }
+        [ProtoMember(3)]
+        public bool IsLocked { get; set; }
     }
 }
