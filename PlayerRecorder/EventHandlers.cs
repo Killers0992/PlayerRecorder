@@ -165,6 +165,7 @@ namespace PlayerRecorder
             {
                 MainClass.RoundTimestamp = DateTime.Now;
                 core.StartRecording();
+                MainClass.recordPickups.Clear();
                 MainClass.framer = 0;
                 Log.Info("New recorder instance created.");
                 MainClass.isRecording = true;

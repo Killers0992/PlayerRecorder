@@ -50,6 +50,8 @@ namespace PlayerRecorder
         public static bool isRecording = false;
         public static bool isReplaying = false;
 
+        public static bool isReplayEnded = false;
+
         public static bool isReplayReady = false;
         public static bool isReplayPaused = false;
 
@@ -62,7 +64,7 @@ namespace PlayerRecorder
         public static Dictionary<int, RecordPickup> recordPickups = new Dictionary<int, RecordPickup>();
         public static int framer;
 
-        public static DateTime RoundTimestamp { get; set; }
+        public static DateTime RoundTimestamp { get; set; } = DateTime.Now;
         
         public static Dictionary<int, ReplayPlayer> replayPlayers = new Dictionary<int, ReplayPlayer>();
         public static Dictionary<int, ReplayPickup> replayPickups = new Dictionary<int, ReplayPickup>();

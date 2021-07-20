@@ -30,7 +30,18 @@ namespace PlayerRecorder.Commands
 
 		protected override bool ExecuteParent(ArraySegment<string> arguments, ICommandSender sender, out string response)
 		{
-			response = "Please specify a valid subcommand!";
+			response = string.Concat(
+				"Replay Commands:",
+				Environment.NewLine,
+				"- REPLAY end - End replay",
+				Environment.NewLine,
+				"- REPLAY pause - Pause/unpause replay",
+				Environment.NewLine,
+				"- REPLAY prepare <port> <id> - Prepare replay",
+				Environment.NewLine,
+				"- REPLAY setspeed <speed> - Set replay speed (default: 0.1)",
+				Environment.NewLine,
+				"- REPLAY start - Start replay");
 			return false;
 		}
 
@@ -40,6 +51,7 @@ namespace PlayerRecorder.Commands
 			this.RegisterCommand(new PauseCommand());
 			this.RegisterCommand(new StartCommand());
 			this.RegisterCommand(new PrepareCommand());
+			this.RegisterCommand(new SetSpeedCommand());
 		}
 	}
 }

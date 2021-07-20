@@ -39,12 +39,13 @@ namespace PlayerRecorder.Core.Replay
                             Environment.NewLine,
                             "[<color=green>PlayerRecorder</color>]",
                             Environment.NewLine,
-                            MainClass.isReplayReady ? 
-                                "Replay is <color=green>ready</color>, type <color=yellow>REPLAY START</color>" :
-                                (string.Concat(
-                                    $"{GetTimeFromFrames(MainClass.framer).ToString("mm\\:ss\\.fff")}/{GetTimeFromFrames(MainClass.LastFrame).ToString("mm\\:ss\\.fff")}{(MainClass.isReplayPaused ? $"{Environment.NewLine}<color=yellow>REPLAY IS PAUSED</color>" : "")}",
-                                    Environment.NewLine,
-                                    $"Events executed <color=green>{MainClass.LastExecutedEvents}</color>"))), 1f);
+                            MainClass.isReplayEnded ? "<color=red>REPLAY ENDED</color>":
+                                MainClass.isReplayReady && !MainClass.isReplaying ? 
+                                    "Replay is <color=green>ready</color>, type <color=yellow>REPLAY START</color>" :
+                                    (string.Concat(
+                                        $"{GetTimeFromFrames(MainClass.framer).ToString("mm\\:ss\\.fff")}/{GetTimeFromFrames(MainClass.LastFrame).ToString("mm\\:ss\\.fff")}{(MainClass.isReplayPaused ? $"{Environment.NewLine}<color=yellow>REPLAY IS PAUSED</color>" : "")}",
+                                        Environment.NewLine,
+                                        $"Events executed <color=green>{MainClass.LastExecutedEvents}</color>"))), 1f);
                     }
                 }
                 catch (Exception) { }

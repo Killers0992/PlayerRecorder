@@ -54,11 +54,14 @@ namespace PlayerRecorder.Core.Replay
 
         public IEnumerator<float> CreateFakePlayer(sbyte clientid, string name, string userId)
         {
+            if (MainClass.replayPickups.ContainsKey(clientid))
+                yield break;
             var npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType.Spectator, ItemType.None, name);
             while(npc.NPCPlayer == null) 
             {
                 yield return Timing.WaitForOneFrame;
             }
+            npc.NPCPlayer.IsGodModeEnabled = true;
             var rplayer = npc.NPCPlayer.ReferenceHub.gameObject.AddComponent<ReplayPlayer>();
             rplayer.uniqueId = clientid;
             MainClass.replayPlayers.Add(clientid, rplayer);
@@ -144,6 +147,7 @@ namespace PlayerRecorder.Core.Replay
             MainClass.replayEvents.Clear();
             MainClass.isRecording = false;
             MainClass.isReplaying = false;
+            MainClass.isReplayEnded = false;
             using (var stream = new MemoryStream(File.ReadAllBytes(path)))
             {
                 MainClass.replayEvents = Serializer.Deserialize<Dictionary<int, List<IEventType>>>(stream);
@@ -272,7 +276,7 @@ namespace PlayerRecorder.Core.Replay
                                     WeaponManager.RpcPlaceDecal(placeDecal.IsBlood, placeDecal.Type, placeDecal.Position.vector, placeDecal.Rotation.quaternion);
                                     continue;
                                 case RoundEndData end:
-                                    Map.Broadcast(3, $"Round ended");
+                                    MainClass.isReplayEnded = true;
                                     continue;
                             }
                         }
@@ -285,6 +289,17 @@ namespace PlayerRecorder.Core.Replay
                 if (MainClass.LastFrame < MainClass.framer)
                 {
                     MainClass.isReplaying = false;
+                    MainClass.isReplayEnded = true;
+                    foreach (var item in MainClass.replayPickups)
+                    {
+                        NetworkServer.Destroy(item.Value.gameObject);
+                    }
+                    MainClass.replayPickups.Clear();
+                    foreach (var player in MainClass.replayPlayers)
+                    {
+                        NetworkServer.Destroy(player.Value.gameObject);
+                    }
+                    MainClass.replayPlayers.Clear();
                     break;
                 }
                 MainClass.framer++;

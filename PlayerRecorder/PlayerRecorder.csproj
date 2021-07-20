@@ -123,6 +123,7 @@
     <Compile Include="Commands\PrepareCommand.cs" />
     <Compile Include="Commands\ReplayCommand.cs" />
     <Compile Include="Commands\PauseCommand.cs" />
+    <Compile Include="Commands\SetSpeedCommand.cs" />
     <Compile Include="Commands\StartCommand.cs" />
     <Compile Include="Core\Record\DoorRecord.cs" />
     <Compile Include="Core\Record\LiftRecord.cs" />
