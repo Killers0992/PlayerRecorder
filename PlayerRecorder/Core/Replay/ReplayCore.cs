@@ -187,6 +187,8 @@ namespace PlayerRecorder.Core.Replay
                         {
                             case PlayerInfoData pinfo:
                                 var cor = Timing.RunCoroutine(CreateFakePlayer(pinfo.PlayerID, pinfo.UserName, pinfo.UserID));
+                                if (cor == null)
+                                    continue;
                                 while (cor.IsRunning)
                                 {
                                     yield return Timing.WaitForOneFrame;
