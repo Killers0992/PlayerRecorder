@@ -1,14 +1,18 @@
 ﻿using Exiled.API.Features;
-using Interactables.Interobjects;
 using MapGeneration;
 using MEC;
 using PlayerRecorder.Interfaces;
 using PlayerRecorder.Structs;
 using ProtoBuf;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
+using Utf8Json;
 
 namespace PlayerRecorder.Core.Record
 {
@@ -59,18 +63,55 @@ namespace PlayerRecorder.Core.Record
             }
         }
 
-        public static IEnumerator<float> Process(int round)
+        public static TimeSpan GetTimeFromFrames(int frames)
+        {
+            return TimeSpan.FromSeconds(frames * MainClass.singleton.Config.replayDelay);
+        }
+
+
+        public static IEnumerator<float> Process(int round, DateTime timeStamp)
         {
             if (MainClass.recordFrames.TryGetValue(round, out Dictionary<int, List<IEventType>> events))
             {
-                var recordingStream = new FileStream(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}", $"Record_{MainClass.RoundTimestamp.Ticks}.rd"), FileMode.CreateNew);
+                var recordingStream = new FileStream(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}", $"Record_{timeStamp.Ticks}.rd"), FileMode.CreateNew);
+
                 Serializer.Serialize(recordingStream, events);
                 recordingStream.Flush();
                 recordingStream.Close();
+                if (!string.IsNullOrEmpty(MainClass.singleton.Config.webhookUrl))
+                {
+                    TimeSpan recordLength = GetTimeFromFrames(events.Last().Key);
+                    HttpQuery.Post(MainClass.singleton.Config.webhookUrl, "payload_json=" + JsonSerializer.ToJsonString<DiscordWebhook>(new DiscordWebhook(string.Empty, "Player Recorder", "https://cdn.discordapp.com/attachments/742563439918055510/867318607826386954/recording-icon-15.png", false, new DiscordEmbed[]
+                    {
+                        new DiscordEmbed("Round record", "rich", $"New record on server ``{Server.IpAddress}:{Server.Port}``", CheaterReport.WebhookColor, new DiscordEmbedField[]
+                        {
+                            new DiscordEmbedField("Info", string.Concat($"Length ``{(recordLength.TotalMinutes == 0 ? "" : $"{recordLength.TotalMinutes.ToString("F0")} minutes ")}{recordLength.Seconds.ToString("F0")} seconds``"), false),
+                            new DiscordEmbedField("Command", $"||replay prepare {Server.Port} {timeStamp.Ticks}||", false)
+                        })
+                    })));
+                }
+
                 MainClass.recordFrames.Remove(round);
+                if (MainClass.singleton.Config.compressAfter != -1)
+                {
+                    var files = Directory.GetFiles(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}"), "*.rd");
+                    if (files.Length < MainClass.singleton.Config.compressAfter)
+                        yield break;
+                    string firstFile = Path.GetFileNameWithoutExtension(files.First()).Replace("Record_", "");
+                    string lastFile = Path.GetFileNameWithoutExtension(files.Last()).Replace("Record_", "");
+                    using (var archive = ZipArchive.Create())
+                    {
+                        archive.AddAllFromDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}"), "*.rd");
+                        archive.SaveTo(Path.Combine(MainClass.pluginDir, "RecorderData", $"{Server.Port}", $"RecordCompress_{firstFile}-{lastFile}.zip"), CompressionType.Deflate);
+                    }
+                    foreach (var file in files)
+                        File.Delete(file);
+                    Log.Info($"Compressed {files.Length} records into zip file.");
+                }
             }
             yield break;
         }
+
 
 
         public IEnumerator<float> FrameRecord()

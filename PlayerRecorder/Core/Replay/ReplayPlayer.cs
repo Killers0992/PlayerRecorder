@@ -30,19 +30,26 @@ namespace PlayerRecorder.Core.Replay
             if (uniqueId == 0)
                 return;
 
+            try
+            {
+                if (hub.animationController.NetworkcurAnim != e.CurrentAnim)
+                    hub.animationController.NetworkcurAnim = e.CurrentAnim;
 
+                if (hub.animationController.Networkspeed != e.Speed.vector)
+                    hub.animationController.Networkspeed = e.Speed.vector;
 
-            if (hub.animationController.NetworkcurAnim != e.CurrentAnim)
-                hub.animationController.NetworkcurAnim = e.CurrentAnim;
+                if (hub.animationController.Network_curMoveState != e.MoveState)
+                    hub.animationController.Network_curMoveState = e.MoveState;
 
-            if (hub.animationController.Networkspeed != e.Speed.vector)
-                hub.animationController.Networkspeed = e.Speed.vector;
+                if (hub.characterClassManager.NetworkCurClass != (RoleType)e.RoleID)
+                    hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
 
-            if (hub.animationController.Network_curMoveState != e.MoveState)
-                hub.animationController.Network_curMoveState = e.MoveState;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
 
-            if (hub.characterClassManager.NetworkCurClass != (RoleType)e.RoleID)
-                hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
 
             try
             {

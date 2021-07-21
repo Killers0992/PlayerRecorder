@@ -3,11 +3,13 @@ using Exiled.Events.EventArgs;
 using Interactables.Interobjects.DoorUtils;
 using MEC;
 using Mirror;
+using NPCS;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
 using PlayerRecorder.Structs;
 using System;
 using System.IO;
+using Utf8Json;
 
 namespace PlayerRecorder
 {
@@ -30,6 +32,41 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Map.PlacingDecal += Map_PlacingDecal;
             Exiled.Events.Handlers.Map.PlacingBlood += Map_PlacingBlood;
             Exiled.Events.Handlers.Map.AnnouncingScpTermination += Map_AnnouncingScpTermination;
+            Exiled.Events.Handlers.Server.LocalReporting += Server_LocalReporting;
+            Exiled.Events.Handlers.Player.Spawning += Player_Spawning;
+        }
+
+        private void Player_Spawning(SpawningEventArgs ev)
+        {
+            if (ev.Player.IsNPC())
+                return;
+            if (MainClass.isReplayReady && MainClass.bringSpectatorToTarget != -1)
+            {
+                if (MainClass.replayPlayers.TryGetValue(MainClass.bringSpectatorToTarget, out ReplayPlayer plr))
+                {
+                    if (plr.hub.characterClassManager.IsAlive)
+                    {
+                        ev.Position = plr.transform.position;
+                    }
+                }
+            }
+        }
+
+        private void Server_LocalReporting(LocalReportingEventArgs ev)
+        {
+            if (!MainClass.isRecording)
+                return;
+            HttpQuery.Post(MainClass.singleton.Config.webhookUrl, "payload_json=" + JsonSerializer.ToJsonString<DiscordWebhook>(new DiscordWebhook(string.Empty, "Player Recorder", "https://cdn.discordapp.com/attachments/742563439918055510/867318607826386954/recording-icon-15.png", false, new DiscordEmbed[]
+            {
+                new DiscordEmbed("Round report", "rich", $"New report on server ``{Server.IpAddress}:{Server.Port}``", CheaterReport.WebhookColor, new DiscordEmbedField[]
+                {
+                    new DiscordEmbedField("Issuer" , $"{ev.Issuer.Nickname} (||{ev.Issuer.UserId}||)", false),
+                    new DiscordEmbedField("Reported" , $"{ev.Target.Nickname} (||{ev.Target.UserId}||)", false),
+                    new DiscordEmbedField("Reason" , $"{ev.Reason}", false),
+                    new DiscordEmbedField("Info", $"If you want to replay that wait to round end beacuse record is not ready !!", false),
+                    new DiscordEmbedField("Command", $"||replay prepare {Server.Port} {MainClass.RoundTimestamp.Ticks} {MainClass.framer - ((MainClass.singleton.Config.secondsBeforeReport/MainClass.singleton.Config.recordDelay)*2)} {ev.Target.Id}||", false)
+                })
+            })));
         }
 
         private void Map_PlacingBlood(PlacingBloodEventArgs ev)
@@ -72,6 +109,14 @@ namespace PlayerRecorder
 
         private void Player_Verified(VerifiedEventArgs ev)
         {
+            if (ev.Player.IsNPC())
+                return;
+            if (MainClass.isReplayReady)
+            {
+                ev.Player.Role = RoleType.Tutorial;
+                ev.Player.NoClipEnabled = true;
+                ev.Player.IsGodModeEnabled = true;
+            }
             if (!MainClass.isRecording)
                 return;
             ev.Player.GameObject.AddComponent<RecordPlayer>();
@@ -128,7 +173,7 @@ namespace PlayerRecorder
         {
             ReplayCache.ClearCache();
             MainClass.isRecording = false;
-            Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID));
+            Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID, MainClass.RoundTimestamp));
             MainClass.currentRoundID++;
             Log.Info($"Round restart with new round id: {MainClass.currentRoundID}");
             if (MainClass.replayHandler != null && !MainClass.isReplayReady)
@@ -160,6 +205,8 @@ namespace PlayerRecorder
                 CharacterClassManager.ForceRoundStart();
                 MainClass.replayPickups.Clear();
                 MainClass.replayPlayers.Clear();
+                if (MainClass.forceReplayStart)
+                    MainClass.isReplaying = true;
             }
             else
             {

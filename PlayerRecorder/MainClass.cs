@@ -55,6 +55,10 @@ namespace PlayerRecorder
         public static bool isReplayReady = false;
         public static bool isReplayPaused = false;
 
+        public static bool forceReplayStart = false;
+
+        public static int bringSpectatorToTarget = -1;
+
         public static int LastFrame = 9999;
         public static int LastExecutedEvents = 0;
 
