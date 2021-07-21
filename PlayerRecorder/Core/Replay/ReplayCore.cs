@@ -249,7 +249,7 @@ namespace PlayerRecorder.Core.Replay
                                     playerUpdateHold.UpdateHoldingItem(ehold);
                                 continue;
                             case CreateRagdollData ragdoll:
-                                RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, ragdoll.Velocity.vector, ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
+                                RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, new Vector3(0f,0f,0f), ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
                                 continue;
                             case GeneratorUpdateData genupdate:
                                 Generator079 generator = GetBestGenerator(genupdate.Position.vector);
