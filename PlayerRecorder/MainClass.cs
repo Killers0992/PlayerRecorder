@@ -7,11 +7,7 @@ using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Evs = Exiled.Events;
+
 namespace PlayerRecorder
 {
     public class MainClass : Plugin<PluginConfig>
@@ -19,6 +15,8 @@ namespace PlayerRecorder
         public override string Author { get; } = "Killers0992";
         public override string Name { get; } = "PlayerRecorder";
         public override string Prefix { get; } = "playerrecorder";
+        public override Version Version { get; } = new Version(1, 0, 0);
+        public override Version RequiredExiledVersion { get; } = new Version(2,11,0);
 
         public RecordCore core;
         public ReplayCore core2;
@@ -29,8 +27,12 @@ namespace PlayerRecorder
 
         public static string pluginDir;
 
+        private bool isLoaded = false;
+
         public override void OnEnabled()
         {
+            if (isLoaded)
+                return;
             pluginDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "Plugins", "PlayerRecorder");
             if (!Directory.Exists(pluginDir))
                 Directory.CreateDirectory(pluginDir);
@@ -39,8 +41,9 @@ namespace PlayerRecorder
             core2 = CustomNetworkManager.singleton.gameObject.AddComponent<ReplayCore>();
             eventHandlers = new EventHandlers(core, core2);
             hud = new ReplayHud();
-            HarmonyLib.Harmony hrm = new HarmonyLib.Harmony("Patcher.recorder");
+            HarmonyLib.Harmony hrm = new HarmonyLib.Harmony($"playerrecorder.{DateTime.Now.Ticks}");
             hrm.PatchAll();
+            isLoaded = true;
             base.OnEnabled();
         }
         public static CoroutineHandle replayHandler;
