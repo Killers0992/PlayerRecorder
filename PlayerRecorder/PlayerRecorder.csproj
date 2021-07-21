@@ -40,7 +40,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Output\dependencies\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="0NPCS, Version=1.6.3.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="0NPCS, Version=1.4.6.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Users\Killers0992\Downloads\0NPCS.dll</HintPath>
     </Reference>
@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\EndCommand.cs" />
+    <Compile Include="Commands\ListCommand.cs" />
     <Compile Include="Commands\PrepareCommand.cs" />
     <Compile Include="Commands\ReplayCommand.cs" />
     <Compile Include="Commands\PauseCommand.cs" />

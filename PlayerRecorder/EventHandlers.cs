@@ -211,9 +211,9 @@ namespace PlayerRecorder
             else
             {
                 MainClass.RoundTimestamp = DateTime.Now;
-                core.StartRecording();
                 MainClass.recordPickups.Clear();
                 MainClass.framer = 0;
+                core.StartRecording();
                 Log.Info("New recorder instance created.");
                 MainClass.isRecording = true;
                 foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())

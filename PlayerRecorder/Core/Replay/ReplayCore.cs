@@ -56,24 +56,16 @@ namespace PlayerRecorder.Core.Replay
         {
             if (MainClass.replayPlayers.ContainsKey(clientid))
                 yield break;
-            var npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType.Spectator, ItemType.None, name);
-            
-            while(npc.NPCPlayer == null) 
+            Npc npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType.Spectator, ItemType.None, name);
+            while(npc?.NPCPlayer == null) 
             {
                 yield return Timing.WaitForOneFrame;
             }
 
-            try
-            {
-                npc.NPCPlayer.IsGodModeEnabled = true;
-                var rplayer = npc.NPCPlayer.ReferenceHub.gameObject.AddComponent<ReplayPlayer>();
-                rplayer.uniqueId = clientid;
-                MainClass.replayPlayers.Add(clientid, rplayer);
-            }
-            catch(Exception ex)
-            {
-                Log.Error(ex.ToString());
-            }
+            npc.NPCPlayer.IsGodModeEnabled = true;
+            var rplayer = npc.NPCPlayer.ReferenceHub.gameObject.AddComponent<ReplayPlayer>();
+            rplayer.uniqueId = clientid;
+            MainClass.replayPlayers.Add(clientid, rplayer);
         }
 
         public Role GetRoleByName(string name)
@@ -151,7 +143,7 @@ namespace PlayerRecorder.Core.Replay
             return null;
         }
 
-        public IEnumerator<float> Replay(string path, int forwardToFrame = -1, int targetUser = -1)
+        public IEnumerator<float> Replay(byte[] bytes, int forwardToFrame = -1, int targetUser = -1)
         {
             MainClass.replayEvents.Clear();
             MainClass.isRecording = false;
@@ -159,7 +151,7 @@ namespace PlayerRecorder.Core.Replay
             MainClass.isReplayEnded = false;
             MainClass.forceReplayStart = forwardToFrame != -1;
             MainClass.bringSpectatorToTarget = targetUser;
-            using (var stream = new MemoryStream(File.ReadAllBytes(path)))
+            using (var stream = new MemoryStream(bytes))
             {
                 MainClass.replayEvents = Serializer.Deserialize<Dictionary<int, List<IEventType>>>(stream);
             }

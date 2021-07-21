@@ -41,7 +41,9 @@ namespace PlayerRecorder.Commands
 				Environment.NewLine,
 				"- REPLAY setspeed <speed> - Set replay speed (default: 0.1)",
 				Environment.NewLine,
-				"- REPLAY start - Start replay");
+				"- REPLAY start - Start replay",
+				Environment.NewLine,
+				"- REPLAY list - List of records.");
 			return false;
 		}
 
@@ -52,6 +54,7 @@ namespace PlayerRecorder.Commands
 			this.RegisterCommand(new StartCommand());
 			this.RegisterCommand(new PrepareCommand());
 			this.RegisterCommand(new SetSpeedCommand());
+			this.RegisterCommand(new ListCommand());
 		}
 	}
 }
