@@ -24,11 +24,14 @@ namespace PlayerRecorder.Commands
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
-            Player player = Player.Get((sender as PlayerCommandSender).ReferenceHub);
-            if (!player.CheckPermission("playerrecorder.setspeed"))
+            if (sender is PlayerCommandSender a)
             {
-                response = "No Permission";
-                return true;
+                Player player = Player.Get(a.ReferenceHub);
+                if (!player.CheckPermission("playerrecorder.setspeed"))
+                {
+                    response = "No Permission";
+                    return true;
+                }
             }
             if (arguments.Count == 1)
             {

@@ -57,14 +57,23 @@ namespace PlayerRecorder.Core.Replay
             if (MainClass.replayPlayers.ContainsKey(clientid))
                 yield break;
             var npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType.Spectator, ItemType.None, name);
+            
             while(npc.NPCPlayer == null) 
             {
                 yield return Timing.WaitForOneFrame;
             }
-            npc.NPCPlayer.IsGodModeEnabled = true;
-            var rplayer = npc.NPCPlayer.ReferenceHub.gameObject.AddComponent<ReplayPlayer>();
-            rplayer.uniqueId = clientid;
-            MainClass.replayPlayers.Add(clientid, rplayer);
+
+            try
+            {
+                npc.NPCPlayer.IsGodModeEnabled = true;
+                var rplayer = npc.NPCPlayer.ReferenceHub.gameObject.AddComponent<ReplayPlayer>();
+                rplayer.uniqueId = clientid;
+                MainClass.replayPlayers.Add(clientid, rplayer);
+            }
+            catch(Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
         }
 
         public Role GetRoleByName(string name)

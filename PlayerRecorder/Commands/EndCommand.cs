@@ -25,12 +25,16 @@ namespace PlayerRecorder.Commands
 
 		public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
-            Player player = Player.Get((sender as PlayerCommandSender).ReferenceHub);
-            if (!player.CheckPermission("playerrecorder.end"))
+            if (sender is PlayerCommandSender a)
             {
-                response = "No Permission";
-                return true;
+                Player player = Player.Get(a.ReferenceHub);
+                if (!player.CheckPermission("playerrecorder.end"))
+                {
+                    response = "No Permission";
+                    return true;
+                }
             }
+
             if (MainClass.isReplaying)
             {
                 MainClass.isReplaying = false;
