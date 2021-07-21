@@ -1,5 +1,8 @@
 ﻿using CommandSystem;
+using Exiled.API.Features;
+using Exiled.Permissions.Extensions;
 using Mirror;
+using RemoteAdmin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +24,13 @@ namespace PlayerRecorder.Commands
 		public string Description { get; } = "End replay.";
 
 		public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
-		{
+        {
+            Player player = Player.Get((sender as PlayerCommandSender).ReferenceHub);
+            if (!player.CheckPermission("playerrecorder.end"))
+            {
+                response = "No Permission";
+                return true;
+            }
             if (MainClass.isReplaying)
             {
                 MainClass.isReplaying = false;
@@ -32,9 +41,9 @@ namespace PlayerRecorder.Commands
                     NetworkServer.Destroy(item.Value.gameObject);
                 }
                 MainClass.replayPickups.Clear();
-                foreach (var player in MainClass.replayPlayers)
+                foreach (var player2 in MainClass.replayPlayers)
                 {
-                    NetworkServer.Destroy(player.Value.gameObject);
+                    NetworkServer.Destroy(player2.Value.gameObject);
                 }
                 MainClass.replayPlayers.Clear();
                 response = "Replay ended.";

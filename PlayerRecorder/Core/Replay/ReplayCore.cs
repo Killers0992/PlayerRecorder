@@ -54,7 +54,7 @@ namespace PlayerRecorder.Core.Replay
 
         public IEnumerator<float> CreateFakePlayer(sbyte clientid, string name, string userId)
         {
-            if (MainClass.replayPickups.ContainsKey(clientid))
+            if (MainClass.replayPlayers.ContainsKey(clientid))
                 yield break;
             var npc = Methods.CreateNPC(new Vector3(0f, 0f, 0f), Vector2.zero, Vector3.one, RoleType.Spectator, ItemType.None, name);
             while(npc.NPCPlayer == null) 

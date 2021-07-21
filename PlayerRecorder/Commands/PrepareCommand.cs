@@ -1,5 +1,8 @@
 ﻿using CommandSystem;
+using Exiled.API.Features;
+using Exiled.Permissions.Extensions;
 using MEC;
+using RemoteAdmin;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,6 +26,12 @@ namespace PlayerRecorder.Commands
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
+            Player player = Player.Get((sender as PlayerCommandSender).ReferenceHub);
+            if (!player.CheckPermission("playerrecorder.prepare"))
+            {
+                response = "No Permission";
+                return true;
+            }
             if (arguments.Count == 2)
             {
                 if (File.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", arguments.At(0), "Record_" + arguments.At(1) + ".rd")))

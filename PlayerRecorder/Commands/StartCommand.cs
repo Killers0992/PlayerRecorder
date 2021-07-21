@@ -1,4 +1,7 @@
 ﻿using CommandSystem;
+using Exiled.API.Features;
+using Exiled.Permissions.Extensions;
+using RemoteAdmin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +24,12 @@ namespace PlayerRecorder.Commands
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
+            Player player = Player.Get((sender as PlayerCommandSender).ReferenceHub);
+            if (!player.CheckPermission("playerrecorder.stop"))
+            {
+                response = "No Permission";
+                return true;
+            }
             if (MainClass.isReplayReady && !MainClass.isReplaying)
             {
                 MainClass.isReplaying = true;
