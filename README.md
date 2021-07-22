@@ -18,7 +18,7 @@ Recording starts while waiting for players
 
 # How install?
 
-1. Download ``0NPCS.dll / depedencies.zip / PlayerRecorder.dll`` from releases page
+1. Download ``0NPCS.dll / depedencies.zip / PlayerRecorder.dll`` from [releases](https://github.com/Killers0992/PlayerRecorder/releases) page
 
 2. Put ``0NPCs.dll and PlayerRecorder.dll`` in ``Exiled/Plugins`` and extract all files from ``depedencies.zip`` and put them in ``Exiled/Plugins/depedencies``
  
