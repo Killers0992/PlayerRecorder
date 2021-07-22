@@ -33,15 +33,20 @@ Commands:
 
 (Permission: playerrecorder.prepare)
 
-- REPLAY prepare <port> <id> <OPTIONAL: frameId> <OPTIONAL: playerId> - Prepare replay
+- REPLAY prepare ``<port> <id> <OPTIONAL: frameId> <OPTIONAL: playerId>`` - Prepare replay
 
 (Permission: playerrecorder.setspeed)
 
-- REPLAY setspeed <speed> - Set replay speed (default: 0.1)
+- REPLAY setspeed ``<speed>`` - Set replay speed (default: 0.1)
 
 (Permission: playerrecorder.start)
 
 - REPLAY start - Start replay
+
+
+(Permission: playerrecorder.list)
+
+- REPLAY list - List of all avaliable records
 
 Some Info:
 
