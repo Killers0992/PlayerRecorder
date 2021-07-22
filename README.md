@@ -13,6 +13,15 @@ Which things are recorded rn?
 - Weapon reload/shot
 - SCP914 Knob change
 
+Recording starts while waiting for players
+
+
+# How install?
+
+1. Download ``0NPCS.dll / depedencies.zip / PlayerRecorder.dll`` from releases page
+2. Put ``0NPCs.dll and PlayerRecorder.dll`` in ``Exiled/Plugins`` and extrac all files from ``depedencies.zip`` and but them in ``Exiled/Plugins/depedencies``
+3. Start server.
+
 Webhook support for discord:
 
 ![Image](https://cdn.discordapp.com/attachments/668651891944587264/867326536154611712/unknown.png)
