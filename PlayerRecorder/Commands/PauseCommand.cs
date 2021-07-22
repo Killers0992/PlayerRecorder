@@ -36,7 +36,7 @@ namespace PlayerRecorder.Commands
             if (MainClass.isReplaying)
             {
                 MainClass.isReplayPaused = !MainClass.isReplayPaused;
-                response = $"Replay {(MainClass.isReplayPaused ? "paused" : "started")}.";
+                response = $"Replay {(MainClass.isReplayPaused ? "paused" : "unpaused")}.";
             }
             else
             {
