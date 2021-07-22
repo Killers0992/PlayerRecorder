@@ -1,6 +1,8 @@
 ﻿using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
+using PlayerRecorder.Extensions;
+using PlayerRecorder.Models;
 using RemoteAdmin;
 using SharpCompress.Archives.Zip;
 using System;
@@ -24,27 +26,25 @@ namespace PlayerRecorder.Commands
 
         public string Description { get; } = "Records list.";
 
-        public Dictionary<string, DateTime> GetFiles()
+        public List<RecordFile> GetFiles()
         {
-            var files = Directory.GetFiles(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
-            Dictionary<string, DateTime> items = new Dictionary<string, DateTime>();
+            var files = new DirectoryInfo(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())).GetFiles();
+            List<RecordFile> items = new List<RecordFile>();
             foreach (var file in files)
             {
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                var exten = Path.GetExtension(file);
-                switch (exten.ToUpper())
+                switch (file.Extension.ToUpper())
                 {
                     case ".RD":
-                        items.Add(fileName, new DateTime(long.Parse(fileName.Replace("Record_", ""))));
+                        items.Add(new RecordFile() { FullName = file.Name.Replace(".rd", ""), FileSize = file.Length, Time = new DateTime(long.Parse(file.Name.Replace(".rd", "").Replace("Record_", "")))});
                         break;
                     case ".ZIP":
-                        using (var zip = ZipArchive.Open(file))
+                        using (var zip = ZipArchive.Open(file.FullName))
                         {
                             foreach (var entry in zip.Entries)
                             {
                                 if (entry.Key.EndsWith(".rd"))
                                 {
-                                    items.Add(entry.Key.Replace(".rd", ""), new DateTime(long.Parse(entry.Key.Replace("Record_", "").Replace(".rd", ""))));
+                                    items.Add(new RecordFile() { FullName = entry.Key.Replace(".rd", ""), FileSize = entry.Size, Time = new DateTime(long.Parse(entry.Key.Replace("Record_", "").Replace(".rd", ""))) });
                                 }
                             }
                         }
@@ -69,7 +69,7 @@ namespace PlayerRecorder.Commands
             response = "Records list:\n";
             foreach(var file in files)
             {
-                response += " - " + file.Key + " | Time: " + file.Value.ToString() + "\n";
+                response += $" - {file.FullName} | Time: {file.Time.ToString()} | Size: {file.FileSize.BytesToString()}\n";
             }
             return true;
         }

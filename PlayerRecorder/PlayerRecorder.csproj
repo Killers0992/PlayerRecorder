@@ -133,12 +133,14 @@
     <Compile Include="Core\Replay\ReplayHud.cs" />
     <Compile Include="EventHandlers.cs" />
     <Compile Include="Core\Record\GeneratorRecord.cs" />
+    <Compile Include="Extensions\LongExtensions.cs" />
     <Compile Include="MainClass.cs" />
     <Compile Include="Core\Record\RecordPickup.cs" />
     <Compile Include="Core\Record\RecordPlayer.cs" />
     <Compile Include="Core\Replay\ReplayCore.cs" />
     <Compile Include="Core\Replay\ReplayPickup.cs" />
     <Compile Include="Core\Replay\ReplayPlayer.cs" />
+    <Compile Include="Models\RecordFile.cs" />
     <Compile Include="Structs\Change914KnobData.cs" />
     <Compile Include="Structs\CreateRagdollData.cs" />
     <Compile Include="Structs\DoorData.cs" />
