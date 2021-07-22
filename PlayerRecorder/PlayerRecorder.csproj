@@ -197,8 +197,8 @@
       <InputAssemblies Include="$(OutputPath)/protobuf-net.Core.dll" />
       <InputAssemblies Include="$(OutputPath)/protobuf-net.dll" />
       <InputAssemblies Include="$(OutputPath)/SharpCompress.dll" />
-      <InputAssemblies Include="$(OutputPath)/System.Text.Encoding.CodePages.dll" />
       <InputAssemblies Include="$(OutputPath)/System.Collections.Immutable.dll" />
+      <InputAssemblies Include="$(OutputPath)/System.Text.Encoding.CodePages.dll" />
       <IlRepackLibs Include="$(OutputPath)" />
     </ItemGroup>
     <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(OutputAssembly)" Importance="High" />
