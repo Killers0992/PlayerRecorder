@@ -19,7 +19,9 @@ Recording starts while waiting for players
 # How install?
 
 1. Download ``0NPCS.dll / depedencies.zip / PlayerRecorder.dll`` from releases page
-2. Put ``0NPCs.dll and PlayerRecorder.dll`` in ``Exiled/Plugins`` and extrac all files from ``depedencies.zip`` and but them in ``Exiled/Plugins/depedencies``
+
+2. Put ``0NPCs.dll and PlayerRecorder.dll`` in ``Exiled/Plugins`` and extract all files from ``depedencies.zip`` and put them in ``Exiled/Plugins/depedencies``
+ 
 3. Start server.
 
 Webhook support for discord:
