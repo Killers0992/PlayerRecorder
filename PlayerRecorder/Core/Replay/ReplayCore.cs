@@ -48,7 +48,6 @@ namespace PlayerRecorder.Core.Replay
 
         void Start()
         {
-            DontDestroyOnLoad(this);
             singleton = this;
         }
 

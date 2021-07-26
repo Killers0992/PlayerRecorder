@@ -34,11 +34,21 @@ namespace PlayerRecorder.Core.Record
             }
         }
 
+        private CoroutineHandle pickupsCoroutine, frameCoroutine;
+
         void Awake()
         {
             singleton = this;
-            Timing.RunCoroutine(PickupsWatcher());
-            Timing.RunCoroutine(FrameRecord());
+            pickupsCoroutine = Timing.RunCoroutine(PickupsWatcher());
+            frameCoroutine = Timing.RunCoroutine(FrameRecord());
+        }
+
+        private void OnDestroy()
+        {
+            if (pickupsCoroutine != null)
+                Timing.KillCoroutines(pickupsCoroutine);
+            if (frameCoroutine != null)
+                Timing.KillCoroutines(frameCoroutine);
         }
 
         public IEnumerator<float> PickupsWatcher()
@@ -49,7 +59,7 @@ namespace PlayerRecorder.Core.Record
                     goto skipFor;
                 try
                 {
-                    foreach (var item in UnityEngine.Object.FindObjectsOfType<Pickup>())
+                    foreach (var item in Pickup.Instances)
                     {
                         if (!item.TryGetComponent<RecordPickup>(out RecordPickup _))
                         {

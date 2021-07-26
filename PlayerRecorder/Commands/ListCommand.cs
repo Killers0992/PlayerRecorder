@@ -28,9 +28,8 @@ namespace PlayerRecorder.Commands
 
         public List<RecordFile> GetFiles()
         {
-            var files = new DirectoryInfo(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())).GetFiles();
             List<RecordFile> items = new List<RecordFile>();
-            foreach (var file in files)
+            foreach (var file in new DirectoryInfo(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())).GetFiles())
             {
                 switch (file.Extension.ToUpper())
                 {
@@ -65,9 +64,8 @@ namespace PlayerRecorder.Commands
                     return true;
                 }
             }
-            var files =GetFiles();
             response = "Records list:\n";
-            foreach(var file in files)
+            foreach(var file in GetFiles())
             {
                 response += $" - {file.FullName} | Time: {file.Time.ToString()} | Size: {file.FileSize.BytesToString()}\n";
             }

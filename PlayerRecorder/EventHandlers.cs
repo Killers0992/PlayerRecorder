@@ -36,6 +36,22 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.Spawning += Player_Spawning;
         }
 
+        public void Unregister()
+        {
+            Exiled.Events.Handlers.Server.WaitingForPlayers -= WaitingForPlayers;
+            Exiled.Events.Handlers.Server.RestartingRound -= Server_RestartingRound1;
+            Exiled.Events.Handlers.Player.Shot -= Player_Shot;
+            Exiled.Events.Handlers.Player.ReloadingWeapon -= Player_ReloadingWeapon;
+            Exiled.Events.Handlers.Player.SpawningRagdoll -= Player_SpawningRagdoll;
+            Exiled.Events.Handlers.Scp914.ChangingKnobSetting -= Scp914_ChangingKnobSetting;
+            Exiled.Events.Handlers.Player.Verified -= Player_Verified;
+            Exiled.Events.Handlers.Map.PlacingDecal -= Map_PlacingDecal;
+            Exiled.Events.Handlers.Map.PlacingBlood -= Map_PlacingBlood;
+            Exiled.Events.Handlers.Map.AnnouncingScpTermination -= Map_AnnouncingScpTermination;
+            Exiled.Events.Handlers.Server.LocalReporting -= Server_LocalReporting;
+            Exiled.Events.Handlers.Player.Spawning -= Player_Spawning;
+        }
+
         private void Player_Spawning(SpawningEventArgs ev)
         {
             if (ev.Player.IsNPC())

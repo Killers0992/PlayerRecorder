@@ -29,23 +29,49 @@ namespace PlayerRecorder
 
         private bool isLoaded = false;
 
+
+        private HarmonyLib.Harmony harmony;
+
         public override void OnEnabled()
         {
-            if (isLoaded)
-                return;
+            singleton = this;
             pluginDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "Plugins", "PlayerRecorder");
+            
             if (!Directory.Exists(pluginDir))
                 Directory.CreateDirectory(pluginDir);
-            singleton = this;
+
             core = CustomNetworkManager.singleton.gameObject.AddComponent<RecordCore>();
+
             core2 = CustomNetworkManager.singleton.gameObject.AddComponent<ReplayCore>();
+
             eventHandlers = new EventHandlers(core, core2);
+
             hud = new ReplayHud();
-            HarmonyLib.Harmony hrm = new HarmonyLib.Harmony($"playerrecorder.{DateTime.Now.Ticks}");
-            hrm.PatchAll();
+
+            harmony = new HarmonyLib.Harmony($"playerrecorder.{DateTime.Now.Ticks}");
+            harmony.PatchAll();
+
             isLoaded = true;
             base.OnEnabled();
         }
+
+        public override void OnDisabled()
+        {
+            UnityEngine.Object.Destroy(core);
+            UnityEngine.Object.Destroy(core2);
+
+            eventHandlers.Unregister();
+            eventHandlers = null;
+
+            hud.UnRegister();
+            hud = null;
+
+            harmony.UnpatchAll();
+            harmony = null;
+
+            base.OnDisabled();
+        }
+
         public static CoroutineHandle replayHandler;
 
         public static int currentRoundID = 0;

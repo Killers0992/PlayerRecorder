@@ -11,9 +11,17 @@ namespace PlayerRecorder.Core.Replay
 {
     public class ReplayHud
     {
+        private CoroutineHandle coroutine;
+
         public ReplayHud()
         {
-            Timing.RunCoroutine(HudRefresh());
+            coroutine = Timing.RunCoroutine(HudRefresh());
+        }
+
+        public void UnRegister()
+        {
+            if (coroutine != null)
+                Timing.KillCoroutines(coroutine);
         }
 
         public TimeSpan GetTimeFromFrames(int frames)
