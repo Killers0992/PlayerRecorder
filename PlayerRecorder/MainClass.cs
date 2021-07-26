@@ -35,7 +35,7 @@ namespace PlayerRecorder
         public override void OnEnabled()
         {
             singleton = this;
-            pluginDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "Plugins", "PlayerRecorder");
+            pluginDir = Path.Combine(Paths.Plugins, "PlayerRecorder");
             
             if (!Directory.Exists(pluginDir))
                 Directory.CreateDirectory(pluginDir);
