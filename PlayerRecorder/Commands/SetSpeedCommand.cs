@@ -24,15 +24,12 @@ namespace PlayerRecorder.Commands
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
-            if (sender is PlayerCommandSender a)
+            if (!sender.CheckPermission("playerrecorder.setspeed"))
             {
-                Player player = Player.Get(a.ReferenceHub);
-                if (!player.CheckPermission("playerrecorder.setspeed"))
-                {
-                    response = "No Permission";
-                    return true;
-                }
+                response = "No Permission";
+                return false;
             }
+
             if (arguments.Count == 1)
             {
                 if (float.TryParse(arguments.At(0), out float speed))
@@ -42,8 +39,8 @@ namespace PlayerRecorder.Commands
                     return true;
                 }
             }
-            response = "Failed";
-            return true;
+            response = $"Failed while setting speed.";
+            return false;
         }
     }
 }

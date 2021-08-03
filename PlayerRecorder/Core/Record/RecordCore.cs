@@ -56,19 +56,18 @@ namespace PlayerRecorder.Core.Record
             while (true)
             {
                 if (!MainClass.isRecording)
-                    goto skipFor;
+                    continue;
                 try
                 {
                     foreach (var item in Pickup.Instances)
                     {
-                        if (!item.TryGetComponent<RecordPickup>(out RecordPickup _))
+                        if (!item.TryGetComponent<RecordPickup>(out _))
                         {
                             item.gameObject.AddComponent<RecordPickup>();
                         }
                     }
                 }
                 catch (Exception) { }
-                skipFor:
                 yield return Timing.WaitForSeconds(0.1f);
             }
         }

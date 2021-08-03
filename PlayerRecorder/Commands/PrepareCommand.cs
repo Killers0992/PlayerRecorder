@@ -65,15 +65,12 @@ namespace PlayerRecorder.Commands
 
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
-            if (sender is PlayerCommandSender a)
+            if (!sender.CheckPermission("playerrecorder.prepare"))
             {
-                Player player = Player.Get(a.ReferenceHub);
-                if (!player.CheckPermission("playerrecorder.prepare"))
-                {
-                    response = "No Permission";
-                    return true;
-                }
+                response = "No Permission";
+                return false;
             }
+
             if (arguments.Count == 2)
             {
                 byte[] bytes = GetFileByID(Path.Combine(MainClass.pluginDir, "RecorderData", arguments.At(0)), arguments.At(1));
@@ -85,6 +82,7 @@ namespace PlayerRecorder.Commands
                 else
                 {
                     response = "File not found.";
+                    return false;
                 }
             }
             else if (arguments.Count == 4)
@@ -99,11 +97,13 @@ namespace PlayerRecorder.Commands
                 else
                 {
                     response = "File not found.";
+                    return false;
                 }
             }
             else
             {
                 response = "Syntax: PREPARE <port> <recordId>";
+                return false;
             }
             return true;
         }

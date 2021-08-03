@@ -191,7 +191,7 @@ namespace PlayerRecorder
             MainClass.isRecording = false;
             Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID, MainClass.RoundTimestamp));
             MainClass.currentRoundID++;
-            Log.Info($"Round restart with new round id: {MainClass.currentRoundID}");
+            Log.Debug($"Round restart with new round id: {MainClass.currentRoundID}");
             if (MainClass.replayHandler != null && !MainClass.isReplayReady)
                 Timing.KillCoroutines(MainClass.replayHandler);
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
@@ -212,7 +212,7 @@ namespace PlayerRecorder
             }
             if (MainClass.isReplayReady)
             {
-                Log.Info("Start replay");
+                Log.Debug("Start replay");
                 foreach (var itm in UnityEngine.Object.FindObjectsOfType<Pickup>())
                 {
                     NetworkServer.Destroy(itm.gameObject);
@@ -230,17 +230,17 @@ namespace PlayerRecorder
                 MainClass.recordPickups.Clear();
                 MainClass.framer = 0;
                 core.StartRecording();
-                Log.Info("New recorder instance created.");
+                Log.Debug("New recorder instance created.");
                 MainClass.isRecording = true;
                 foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
                 {
                     gen.gameObject.AddComponent<GeneratorRecord>();
                 }
-                foreach (var door in UnityEngine.Object.FindObjectsOfType<DoorVariant>())
+                foreach (var door in Map.Doors)
                 {
                     door.gameObject.AddComponent<DoorRecord>();
                 }
-                foreach(var lift in UnityEngine.Object.FindObjectsOfType<Lift>())
+                foreach(var lift in Map.Lifts)
                 {
                     lift.gameObject.AddComponent<LiftRecord>();
                 }
