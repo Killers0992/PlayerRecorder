@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
@@ -41,15 +42,15 @@ namespace PlayerRecorder.Core.Record
             RecordCore.OnReceiveEvent(new CreatePickupData()
             {
                 ItemID = uniqueId,
-                ItemType = (int)pickup.ItemId,
-                Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
-                Rotation = new QuaternionData() {  x= pickup.rotation.x, y=pickup.rotation.y, z=pickup.rotation.z,w=pickup.rotation.w}
+                ItemType = (int)pickup.Type,
+                Position = new Vector3Data() { x = pickup.Position.x, y = pickup.Position.y, z = pickup.Position.z },
+                Rotation = new QuaternionData() {  x= pickup.Rotation.x, y=pickup.Rotation.y, z=pickup.Rotation.z,w=pickup.Rotation.w}
             });;
         }
 
         private void Update()
         {                           
-            if (!MainClass.isRecording || pickup?.ItemId == ItemType.None)
+            if (!MainClass.isRecording || pickup?.Type == ItemType.None)
                 return;
             if (currentPosition != transform.position || currentRotation != transform.rotation)
             {
@@ -58,9 +59,9 @@ namespace PlayerRecorder.Core.Record
                 RecordCore.OnReceiveEvent(new UpdatePickupData()
                 {
                     ItemID = uniqueId,
-                    ItemType = (int)pickup.itemId,
-                    Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
-                    Rotation = new QuaternionData() { x = pickup.rotation.x, y = pickup.rotation.y, z = pickup.rotation.z, w = pickup.rotation.w }
+                    ItemType = (int)pickup.Type,
+                    Position = new Vector3Data() { x = pickup.Position.x, y = pickup.Position.y, z = pickup.Position.z },
+                    Rotation = new QuaternionData() { x = pickup.Rotation.x, y = pickup.Rotation.y, z = pickup.Rotation.z, w = pickup.Rotation.w }
                 });
             }
         }

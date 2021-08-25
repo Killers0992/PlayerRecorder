@@ -15,7 +15,7 @@ namespace PlayerRecorder.Core.Record
         public bool IsDoorOpen { get; set; } = false;
         public bool IsUnlocked { get; set; } = false;
 
-        Generator079 _generator;
+        /*Generator079 _generator;
         public Generator079 generator
         {
             get
@@ -24,13 +24,13 @@ namespace PlayerRecorder.Core.Record
                     _generator = GetComponent<Generator079>();
                 return _generator;
             }
-        }
+        }         -*/
 
         private void Update()
         {
             if (!MainClass.isRecording)
                 return;
-            if (TabletConnected != generator.NetworkisTabletConnected)
+            /*if (TabletConnected != generator.NetworkisTabletConnected)
             {
                 TabletConnected = generator.NetworkisTabletConnected;
                 RecordCore.OnReceiveEvent(new GeneratorUpdateData()
@@ -58,7 +58,7 @@ namespace PlayerRecorder.Core.Record
                     IsOpen = IsDoorOpen,
                     Position = new Vector3Data() { x = generator.transform.position.x, y = generator.transform.position.y, z = generator.transform.position.z }
                 });
-            }
+            }     */
         }
     }
 }

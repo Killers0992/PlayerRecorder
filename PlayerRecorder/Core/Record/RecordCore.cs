@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using MapGeneration;
 using MEC;
 using PlayerRecorder.Interfaces;
@@ -59,11 +60,11 @@ namespace PlayerRecorder.Core.Record
                     continue;
                 try
                 {
-                    foreach (var item in Pickup.Instances)
+                    foreach (var item in Map.Pickups)
                     {
-                        if (!item.TryGetComponent<RecordPickup>(out _))
+                        if (!item.Base.gameObject.TryGetComponent<RecordPickup>(out _))
                         {
-                            item.gameObject.AddComponent<RecordPickup>();
+                            item.Base.gameObject.AddComponent<RecordPickup>();
                         }
                     }
                 }

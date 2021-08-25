@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using Interactables.Interobjects;
 using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
@@ -34,7 +35,7 @@ namespace PlayerRecorder.Core.Replay
             }
         }
 
-        private WeaponManager _wmanager;
+        /*private WeaponManager _wmanager;
 
         public WeaponManager WeaponManager
         {
@@ -44,7 +45,7 @@ namespace PlayerRecorder.Core.Replay
                     _wmanager = ReferenceHub.HostHub.weaponManager;
                 return _wmanager;
             }
-        }
+        }*/
 
         void Start()
         {
@@ -102,7 +103,7 @@ namespace PlayerRecorder.Core.Replay
             return bestDoor;
         }
 
-        public Generator079 GetBestGenerator(Vector3 position)
+        /*public Generator079 GetBestGenerator(Vector3 position)
         {
             if (ReplayCache.GeneratorCache.TryGetValue(position, out Generator079 generator))
                 return generator;
@@ -121,7 +122,7 @@ namespace PlayerRecorder.Core.Replay
 
             ReplayCache.GeneratorCache.Add(position, bestGen);
             return bestGen;
-        }
+        }  */
 
 
 
@@ -186,11 +187,11 @@ namespace PlayerRecorder.Core.Replay
                                 }
                                 continue;
                             case CreatePickupData cpickup:
-                                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ReferenceHub.HostHub.inventory.pickupPrefab);
-                                gameObject.GetComponent<Rigidbody>().isKinematic = false;
-                                NetworkServer.Spawn(gameObject);
-                                gameObject.GetComponent<Pickup>().SetupPickup((ItemType)cpickup.ItemType, -1f, ReferenceHub.HostHub.gameObject, new Pickup.WeaponModifiers(false, -1, -1, -1), cpickup.Position.vector, Quaternion.Euler(new Vector3(0, 0, 0)));
-                                var rpickup = gameObject.AddComponent<ReplayPickup>();
+                                Item p = new Item((ItemType)cpickup.ItemType);
+                                //Todo kinematic
+                                Pickup pickup = p.Spawn(cpickup.Position.vector, cpickup.Rotation.quaternion);
+                                var rpickup = pickup.Base.gameObject.AddComponent<ReplayPickup>();
+
                                 rpickup.uniqueId = cpickup.ItemID;
                                 MainClass.replayPickups.Add(cpickup.ItemID, rpickup);
                                 continue;
@@ -251,24 +252,24 @@ namespace PlayerRecorder.Core.Replay
                                     playerUpdateHold.UpdateHoldingItem(ehold);
                                 continue;
                             case CreateRagdollData ragdoll:
-                                RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, new Vector3(0f,0f,0f), ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
+                                RagdollManager.SpawnRagdoll(ragdoll.Position.vector, ragdoll.Rotation.quaternion, new Vector3(0f,0f,0f), ragdoll.ClassID, new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(ragdoll.ToolID), 0, true), false, ragdoll.OwnerID, ragdoll.OwnerNick, ragdoll.PlayerID);
                                 continue;
                             case GeneratorUpdateData genupdate:
-                                Generator079 generator = GetBestGenerator(genupdate.Position.vector);
+                                /*Generator079 generator = GetBestGenerator(genupdate.Position.vector);
                                 generator.NetworkisTabletConnected = genupdate.TabletConnected;
                                 generator.NetworktotalVoltage = genupdate.TotalVoltage;
-                                generator.NetworkremainingPowerup = genupdate.RemainingPowerup;
+                                generator.NetworkremainingPowerup = genupdate.RemainingPowerup;        */
                                 continue;
                             case UnlockGeneratorData genunlock:
-                                Generator079 genDoor = GetBestGenerator(genunlock.Position.vector);
-                                genDoor.NetworkisDoorUnlocked = true;
+                               /* Generator079 genDoor = GetBestGenerator(genunlock.Position.vector);
+                                genDoor.NetworkisDoorUnlocked = true;   */
                                 continue;
                             case OpenCloseGeneratorData genoc:
-                                Generator079 genDoor2 = GetBestGenerator(genoc.Position.vector);
-                                genDoor2.NetworkisDoorOpen = genoc.IsOpen;
+                               /* Generator079 genDoor2 = GetBestGenerator(genoc.Position.vector);
+                                genDoor2.NetworkisDoorOpen = genoc.IsOpen;  */
                                 continue;
                             case Change914KnobData knobData:
-                                Scp914.Scp914Machine.singleton.NetworkknobState = (Scp914.Scp914Knob)knobData.KnobSetting;
+                                //Scp914.Scp914Machine.singleton.NetworkknobState = (Scp914.Scp914Knob)knobData.KnobSetting;
                                 continue;
                             case WarheadUpdateData warheadData:
                                 AlphaWarheadController.Host.NetworktimeToDetonation = warheadData.TimeToDetonation;
@@ -277,10 +278,10 @@ namespace PlayerRecorder.Core.Replay
                                 AlphaWarheadController.Host.NetworkinProgress = warheadData.InProgress;
                                 continue;
                             case ScpTerminationData scpterm:
-                                NineTailedFoxAnnouncer.AnnounceScpTermination(GetRoleByName(scpterm.RoleFullName), new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(scpterm.ToolID), 0), scpterm.GroupID);
+                                NineTailedFoxAnnouncer.AnnounceScpTermination(GetRoleByName(scpterm.RoleFullName), new PlayerStats.HitInfo(0f, "", DamageTypes.FromIndex(scpterm.ToolID), 0, true), scpterm.GroupID);
                                 continue;
                             case PlaceDecalData placeDecal:
-                                WeaponManager.RpcPlaceDecal(placeDecal.IsBlood, placeDecal.Type, placeDecal.Position.vector, placeDecal.Rotation.quaternion);
+                                //WeaponManager.RpcPlaceDecal(placeDecal.IsBlood, placeDecal.Type, placeDecal.Position.vector, placeDecal.Rotation.quaternion);
                                 continue;
                             case RoundEndData end:
                                 MainClass.isReplayEnded = true;

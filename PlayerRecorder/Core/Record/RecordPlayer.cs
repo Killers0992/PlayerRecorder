@@ -58,13 +58,13 @@ namespace PlayerRecorder.Core.Record
                 });
             }
 
-            if (currentHoldingItem != hub.inventory.Network_curItemSynced)
+            if (currentHoldingItem != hub.inventory.NetworkCurItem.TypeId)
             {
-                currentHoldingItem = hub.inventory.Network_curItemSynced;
+                currentHoldingItem = hub.inventory.NetworkCurItem.TypeId;
                 RecordCore.OnReceiveEvent(new UpdateHoldingItem()
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
-                    HoldingItem = (sbyte)hub.inventory.Network_curItemSynced
+                    HoldingItem = (sbyte)hub.inventory.NetworkCurItem.TypeId
                 });
             }
 

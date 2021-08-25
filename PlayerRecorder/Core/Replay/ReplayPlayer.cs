@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using InventorySystem.Items.Firearms;
 using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
@@ -63,7 +64,9 @@ namespace PlayerRecorder.Core.Replay
         {
             if (uniqueId == 0)
                 return;
-            hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
+
+            var ins = hub.inventory.CreateItemInstance((ItemType)e.HoldingItem, true);
+            hub.inventory.ServerSelectItem(ins.ItemSerial);
         }
 
         public void UpdateRole(UpdateRoleData e)
@@ -77,14 +80,20 @@ namespace PlayerRecorder.Core.Replay
         {
             if (uniqueId == 0)
                 return;
-            hub.weaponManager.RpcConfirmShot(false, (int)hub.weaponManager.curWeapon);
+            if (hub.inventory.CurInstance is Firearm fr)
+            {
+                //fr.
+            }
         }
 
         public void ReloadWeapon()
         {
             if (uniqueId == 0)
                 return;
-            hub.weaponManager.RpcReload(hub.weaponManager.curWeapon);
+            if (hub.inventory.CurInstance is Firearm fr)
+            {
+                //
+            }
         }
 
         void OnDestroy()

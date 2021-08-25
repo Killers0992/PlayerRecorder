@@ -1,6 +1,5 @@
 ﻿using Exiled.API.Features;
 using Exiled.Events.EventArgs;
-using Interactables.Interobjects.DoorUtils;
 using MEC;
 using Mirror;
 using NPCS;
@@ -29,7 +28,6 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.SpawningRagdoll += Player_SpawningRagdoll;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting += Scp914_ChangingKnobSetting;
             Exiled.Events.Handlers.Player.Verified += Player_Verified;
-            Exiled.Events.Handlers.Map.PlacingDecal += Map_PlacingDecal;
             Exiled.Events.Handlers.Map.PlacingBlood += Map_PlacingBlood;
             Exiled.Events.Handlers.Map.AnnouncingScpTermination += Map_AnnouncingScpTermination;
             Exiled.Events.Handlers.Server.LocalReporting += Server_LocalReporting;
@@ -45,7 +43,6 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.SpawningRagdoll -= Player_SpawningRagdoll;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting -= Scp914_ChangingKnobSetting;
             Exiled.Events.Handlers.Player.Verified -= Player_Verified;
-            Exiled.Events.Handlers.Map.PlacingDecal -= Map_PlacingDecal;
             Exiled.Events.Handlers.Map.PlacingBlood -= Map_PlacingBlood;
             Exiled.Events.Handlers.Map.AnnouncingScpTermination -= Map_AnnouncingScpTermination;
             Exiled.Events.Handlers.Server.LocalReporting -= Server_LocalReporting;
@@ -98,19 +95,6 @@ namespace PlayerRecorder
             });
         }
 
-        private void Map_PlacingDecal(PlacingDecalEventArgs ev)
-        {
-            if (!MainClass.isRecording)
-                return;
-            RecordCore.OnReceiveEvent(new PlaceDecalData()
-            {
-                IsBlood = false,
-                Type = (sbyte)ev.Type,
-                Position = new Vector3Data() { x = ev.Position.x, y = ev.Position.y, z = ev.Position.z},
-                Rotation = new QuaternionData() {  x = ev.Rotation.x, y = ev.Rotation.y, z = ev.Rotation.z, w = ev.Rotation.w}
-            });
-        }
-
         private void Map_AnnouncingScpTermination(AnnouncingScpTerminationEventArgs ev)
         {
             if (!MainClass.isRecording)
@@ -118,7 +102,7 @@ namespace PlayerRecorder
             RecordCore.OnReceiveEvent(new ScpTerminationData()
             {
                 RoleFullName = ev.Role.fullName,
-                ToolID = ev.HitInfo.Tool,
+                ToolID = (int)ev.HitInfo.Tool.Weapon,
                 GroupID = ev.TerminationCause
             });
         }
@@ -157,7 +141,7 @@ namespace PlayerRecorder
                 ClassID = (int)ev.RoleType,
                 OwnerID = ev.DissonanceId,
                 PlayerID = ev.Owner.Id,
-                ToolID = ev.HitInformations.Tool,
+                ToolID = (int)ev.HitInformations.Tool.Weapon,
                 OwnerNick = ev.Owner.DisplayNickname,
                 Position = new Vector3Data() {  x= ev.Position.x, y= ev.Position.z, z =ev.Position.z},
                 Rotation = new QuaternionData() {  x = ev.Rotation.x, y= ev.Rotation.y, z = ev.Rotation.z, w = ev.Rotation.w},
@@ -213,10 +197,6 @@ namespace PlayerRecorder
             if (MainClass.isReplayReady)
             {
                 Log.Debug("Start replay");
-                foreach (var itm in UnityEngine.Object.FindObjectsOfType<Pickup>())
-                {
-                    NetworkServer.Destroy(itm.gameObject);
-                }
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
                 MainClass.replayPickups.Clear();
@@ -232,13 +212,10 @@ namespace PlayerRecorder
                 core.StartRecording();
                 Log.Debug("New recorder instance created.");
                 MainClass.isRecording = true;
-                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
-                {
-                    gen.gameObject.AddComponent<GeneratorRecord>();
-                }
+
                 foreach (var door in Map.Doors)
                 {
-                    door.gameObject.AddComponent<DoorRecord>();
+                    door.Base.gameObject.AddComponent<DoorRecord>();
                 }
                 foreach(var lift in Map.Lifts)
                 {

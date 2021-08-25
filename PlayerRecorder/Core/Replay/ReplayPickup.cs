@@ -1,10 +1,5 @@
-﻿using Exiled.API.Features;
+﻿using Exiled.API.Features.Items;
 using PlayerRecorder.Structs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace PlayerRecorder.Core.Replay
@@ -28,10 +23,10 @@ namespace PlayerRecorder.Core.Replay
         {
             if (pickup == null || uniqueId == 0)
                 return;
-            pickup.Networkposition = e.Position.vector;
-            pickup.Networkrotation = e.Rotation.quaternion;
-            if (pickup.NetworkitemId != (ItemType)e.ItemType)
-                pickup.NetworkitemId = (ItemType)e.ItemType;
+            pickup.Position = e.Position.vector;
+            pickup.Rotation = e.Rotation.quaternion;
+            //if (pickup.Type != (ItemType)e.ItemType)
+                //pickup.NetworkitemId = (ItemType)e.ItemType;
         }
 
         void OnDestroy()
