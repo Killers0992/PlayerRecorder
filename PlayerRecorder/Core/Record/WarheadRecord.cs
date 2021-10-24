@@ -13,6 +13,10 @@ namespace PlayerRecorder.Core.Record
     {
         public bool InProgress { get; set; } = false;
 
+        public bool CardEntered { get; set; } = false;
+
+        public bool NukeEnabled { get; set; } = false;
+
         AlphaWarheadController _controller;
         public AlphaWarheadController controller
         {
@@ -24,8 +28,22 @@ namespace PlayerRecorder.Core.Record
             }
         }
 
+        AlphaWarheadOutsitePanel _panel;
+        public AlphaWarheadOutsitePanel panel
+        {
+            get
+            {
+                if (_panel == null)
+                    _panel = UnityEngine.Object.FindObjectOfType<AlphaWarheadOutsitePanel>();
+                return _panel;
+            }
+        }
+
         private void Update()
         {
+            if (!MainClass.isRecording)
+                return;
+
             if (InProgress != controller.inProgress)
             {
                 InProgress = controller.inProgress;
@@ -35,6 +53,24 @@ namespace PlayerRecorder.Core.Record
                     TimeToDetonation = controller.timeToDetonation,
                     ResumeScenario = controller.NetworksyncResumeScenario,
                     StartScenario = controller.NetworksyncStartScenario
+                });
+            }
+
+            if (CardEntered != panel.NetworkkeycardEntered)
+            {
+                CardEntered = panel.NetworkkeycardEntered;
+                RecordCore.OnReceiveEvent(new NukeOutsideKeycardEnteredData()
+                {
+                    IsEntered = CardEntered
+                });
+            }
+
+            if (NukeEnabled != AlphaWarheadOutsitePanel.nukeside.Networkenabled)
+            {
+                NukeEnabled = AlphaWarheadOutsitePanel.nukeside.Networkenabled;
+                RecordCore.OnReceiveEvent(new NukesiteSwitchData()
+                {
+                    IsEnabled = NukeEnabled
                 });
             }
         }

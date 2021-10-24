@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using MapGeneration.Distributors;
 using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
@@ -11,51 +12,39 @@ namespace PlayerRecorder.Core.Record
 {
     public class GeneratorRecord : MonoBehaviour
     {
-        public bool TabletConnected { get; set; } = false;
-        public bool IsDoorOpen { get; set; } = false;
-        public bool IsUnlocked { get; set; } = false;
+        public byte Flags { get; set; }
+        public short SyncTime { get; set; }
 
-        Generator079 _generator;
-        public Generator079 generator
+        Scp079Generator _generator;
+        public Scp079Generator generator
         {
             get
             {
                 if (_generator == null)
-                    _generator = GetComponent<Generator079>();
+                    _generator = GetComponent<Scp079Generator>();
                 return _generator;
             }
-        }
+        }         
 
         private void Update()
         {
             if (!MainClass.isRecording)
                 return;
-            if (TabletConnected != generator.NetworkisTabletConnected)
+            if (Flags != generator.Network_flags)
             {
-                TabletConnected = generator.NetworkisTabletConnected;
-                RecordCore.OnReceiveEvent(new GeneratorUpdateData()
+                Flags = generator.Network_flags;
+                RecordCore.OnReceiveEvent(new GeneratorFlagsData()
                 {
-                    TabletConnected = TabletConnected,
-                    TotalVoltage = generator.NetworktotalVoltage,
-                    RemainingPowerup = generator.NetworkremainingPowerup,
+                    Flags = Flags,
                     Position = new Vector3Data() { x = generator.transform.position.x, y = generator.transform.position.y, z = generator.transform.position.z }
                 });
             }
-            if (IsUnlocked != generator.NetworkisDoorUnlocked)
+            if (SyncTime != generator.Network_syncTime)
             {
-                IsUnlocked = generator.NetworkisDoorUnlocked;
-                RecordCore.OnReceiveEvent(new UnlockGeneratorData()
+                SyncTime = generator.Network_syncTime;
+                RecordCore.OnReceiveEvent(new GeneratorTimeData()
                 {
-                    Position = new Vector3Data() { x = generator.transform.position.x, y = generator.transform.position.y, z = generator.transform.position.z }
-                });
-            }
-
-            if (IsDoorOpen != generator.NetworkisDoorOpen)
-            {
-                IsDoorOpen = generator.NetworkisDoorOpen;
-                RecordCore.OnReceiveEvent(new OpenCloseGeneratorData()
-                {
-                    IsOpen = IsDoorOpen,
+                    Time = SyncTime,
                     Position = new Vector3Data() { x = generator.transform.position.x, y = generator.transform.position.y, z = generator.transform.position.z }
                 });
             }

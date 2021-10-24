@@ -3,7 +3,6 @@ using MEC;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
 using PlayerRecorder.Interfaces;
-using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,14 +39,13 @@ namespace PlayerRecorder
             if (!Directory.Exists(pluginDir))
                 Directory.CreateDirectory(pluginDir);
 
+            if (CustomNetworkManager.singleton.gameObject == null)
+                Log.Error($"CustomNetworkManager singleton is null!");
+
             core = CustomNetworkManager.singleton.gameObject.AddComponent<RecordCore>();
-
             core2 = CustomNetworkManager.singleton.gameObject.AddComponent<ReplayCore>();
-
-            eventHandlers = new EventHandlers(core, core2);
-
+            eventHandlers = new EventHandlers(core, core2); 
             hud = new ReplayHud();
-
             harmony = new HarmonyLib.Harmony($"playerrecorder.{DateTime.Now.Ticks}");
             harmony.PatchAll();
 

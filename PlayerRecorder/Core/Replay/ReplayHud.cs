@@ -1,6 +1,6 @@
 ﻿using Exiled.API.Features;
+using JesusQC_Npcs.Features;
 using MEC;
-using NPCS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +37,7 @@ namespace PlayerRecorder.Core.Replay
                     goto skipFor;
                 try
                 {
-                    IEnumerable<Player> players = Player.List.Where(p => !p.IsNPC());
+                    IEnumerable<Player> players = Player.List.Where(p => !Dummy.Dictionary.ContainsKey(p.GameObject));
                     foreach (var player in players)
                     {
                         player.ShowHint(string.Concat(

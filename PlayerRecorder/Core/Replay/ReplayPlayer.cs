@@ -1,4 +1,6 @@
 ﻿using Exiled.API.Features;
+using InventorySystem.Items.Firearms;
+using JesusQC_Npcs.Features;
 using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ namespace PlayerRecorder.Core.Replay
         public int uniqueId = 0;
 
         ReferenceHub _hub;
+        public Dummy _dummy;
 
         public ReferenceHub hub
         {
@@ -32,15 +35,6 @@ namespace PlayerRecorder.Core.Replay
 
             try
             {
-                if (hub.animationController.NetworkcurAnim != e.CurrentAnim)
-                    hub.animationController.NetworkcurAnim = e.CurrentAnim;
-
-                if (hub.animationController.Networkspeed != e.Speed.vector)
-                    hub.animationController.Networkspeed = e.Speed.vector;
-
-                if (hub.animationController.Network_curMoveState != e.MoveState)
-                    hub.animationController.Network_curMoveState = e.MoveState;
-
                 if (hub.characterClassManager.NetworkCurClass != (RoleType)e.RoleID)
                     hub.characterClassManager.NetworkCurClass = (RoleType)e.RoleID;
 
@@ -63,7 +57,8 @@ namespace PlayerRecorder.Core.Replay
         {
             if (uniqueId == 0)
                 return;
-            hub.inventory.Network_curItemSynced = (ItemType)e.HoldingItem;
+
+            hub.inventory.NetworkCurItem = new InventorySystem.Items.ItemIdentifier((ItemType)e.HoldingItem, 0);
         }
 
         public void UpdateRole(UpdateRoleData e)
@@ -77,19 +72,30 @@ namespace PlayerRecorder.Core.Replay
         {
             if (uniqueId == 0)
                 return;
-            hub.weaponManager.RpcConfirmShot(false, (int)hub.weaponManager.curWeapon);
+            if (hub.inventory.CurInstance is Firearm fr)
+            {
+                //fr.
+            }
         }
 
         public void ReloadWeapon()
         {
             if (uniqueId == 0)
                 return;
-            hub.weaponManager.RpcReload(hub.weaponManager.curWeapon);
+            if (hub.inventory.CurInstance is Firearm fr)
+            {
+                //
+            }
         }
 
         void OnDestroy()
         {
             MainClass.replayPlayers.Remove(uniqueId);
+            if (_dummy != null)
+            {
+                Dummy.Dictionary.Remove(_dummy.PlayerWrapper.GameObject);
+                PlayerManager.RemovePlayer(_dummy.PlayerWrapper.GameObject, CustomNetworkManager.slots);
+            }
         }
     }
 }

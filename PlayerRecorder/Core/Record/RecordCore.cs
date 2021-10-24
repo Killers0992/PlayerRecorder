@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using MapGeneration;
 using MEC;
 using PlayerRecorder.Interfaces;
@@ -34,42 +35,18 @@ namespace PlayerRecorder.Core.Record
             }
         }
 
-        private CoroutineHandle pickupsCoroutine, frameCoroutine;
+        private CoroutineHandle frameCoroutine;
 
         void Awake()
         {
             singleton = this;
-            pickupsCoroutine = Timing.RunCoroutine(PickupsWatcher());
             frameCoroutine = Timing.RunCoroutine(FrameRecord());
         }
 
         private void OnDestroy()
         {
-            if (pickupsCoroutine != null)
-                Timing.KillCoroutines(pickupsCoroutine);
             if (frameCoroutine != null)
                 Timing.KillCoroutines(frameCoroutine);
-        }
-
-        public IEnumerator<float> PickupsWatcher()
-        {
-            while (true)
-            {
-                if (!MainClass.isRecording)
-                    continue;
-                try
-                {
-                    foreach (var item in Pickup.Instances)
-                    {
-                        if (!item.TryGetComponent<RecordPickup>(out _))
-                        {
-                            item.gameObject.AddComponent<RecordPickup>();
-                        }
-                    }
-                }
-                catch (Exception) { }
-                yield return Timing.WaitForSeconds(0.1f);
-            }
         }
 
         public static TimeSpan GetTimeFromFrames(int frames)

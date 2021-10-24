@@ -1,9 +1,8 @@
 ﻿using Exiled.API.Features;
 using Exiled.Events.EventArgs;
-using Interactables.Interobjects.DoorUtils;
+using JesusQC_Npcs.Features;
+using MapGeneration.Distributors;
 using MEC;
-using Mirror;
-using NPCS;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
 using PlayerRecorder.Structs;
@@ -29,7 +28,6 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.SpawningRagdoll += Player_SpawningRagdoll;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting += Scp914_ChangingKnobSetting;
             Exiled.Events.Handlers.Player.Verified += Player_Verified;
-            Exiled.Events.Handlers.Map.PlacingDecal += Map_PlacingDecal;
             Exiled.Events.Handlers.Map.PlacingBlood += Map_PlacingBlood;
             Exiled.Events.Handlers.Map.AnnouncingScpTermination += Map_AnnouncingScpTermination;
             Exiled.Events.Handlers.Server.LocalReporting += Server_LocalReporting;
@@ -45,7 +43,6 @@ namespace PlayerRecorder
             Exiled.Events.Handlers.Player.SpawningRagdoll -= Player_SpawningRagdoll;
             Exiled.Events.Handlers.Scp914.ChangingKnobSetting -= Scp914_ChangingKnobSetting;
             Exiled.Events.Handlers.Player.Verified -= Player_Verified;
-            Exiled.Events.Handlers.Map.PlacingDecal -= Map_PlacingDecal;
             Exiled.Events.Handlers.Map.PlacingBlood -= Map_PlacingBlood;
             Exiled.Events.Handlers.Map.AnnouncingScpTermination -= Map_AnnouncingScpTermination;
             Exiled.Events.Handlers.Server.LocalReporting -= Server_LocalReporting;
@@ -54,7 +51,7 @@ namespace PlayerRecorder
 
         private void Player_Spawning(SpawningEventArgs ev)
         {
-            if (ev.Player.IsNPC())
+            if (Dummy.Dictionary.ContainsKey(ev.Player.GameObject))
                 return;
             if (MainClass.isReplayReady && MainClass.bringSpectatorToTarget != -1)
             {
@@ -98,34 +95,22 @@ namespace PlayerRecorder
             });
         }
 
-        private void Map_PlacingDecal(PlacingDecalEventArgs ev)
-        {
-            if (!MainClass.isRecording)
-                return;
-            RecordCore.OnReceiveEvent(new PlaceDecalData()
-            {
-                IsBlood = false,
-                Type = (sbyte)ev.Type,
-                Position = new Vector3Data() { x = ev.Position.x, y = ev.Position.y, z = ev.Position.z},
-                Rotation = new QuaternionData() {  x = ev.Rotation.x, y = ev.Rotation.y, z = ev.Rotation.z, w = ev.Rotation.w}
-            });
-        }
-
         private void Map_AnnouncingScpTermination(AnnouncingScpTerminationEventArgs ev)
         {
             if (!MainClass.isRecording)
                 return;
+
             RecordCore.OnReceiveEvent(new ScpTerminationData()
             {
                 RoleFullName = ev.Role.fullName,
-                ToolID = ev.HitInfo.Tool,
+                ToolID = (int)ev.HitInfo.Tool.Weapon,
                 GroupID = ev.TerminationCause
             });
         }
 
         private void Player_Verified(VerifiedEventArgs ev)
         {
-            if (ev.Player.IsNPC())
+            if (Dummy.Dictionary.ContainsKey(ev.Player.GameObject))
                 return;
             if (MainClass.isReplayReady)
             {
@@ -157,7 +142,7 @@ namespace PlayerRecorder
                 ClassID = (int)ev.RoleType,
                 OwnerID = ev.DissonanceId,
                 PlayerID = ev.Owner.Id,
-                ToolID = ev.HitInformations.Tool,
+                ToolID = (int)ev.HitInformations.Tool.Weapon,
                 OwnerNick = ev.Owner.DisplayNickname,
                 Position = new Vector3Data() {  x= ev.Position.x, y= ev.Position.z, z =ev.Position.z},
                 Rotation = new QuaternionData() {  x = ev.Rotation.x, y= ev.Rotation.y, z = ev.Rotation.z, w = ev.Rotation.w},
@@ -191,7 +176,7 @@ namespace PlayerRecorder
             MainClass.isRecording = false;
             Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID, MainClass.RoundTimestamp));
             MainClass.currentRoundID++;
-            Log.Debug($"Round restart with new round id: {MainClass.currentRoundID}");
+            Log.Debug($"Round restart with new round id: {MainClass.currentRoundID}", MainClass.singleton.Config.debug);
             if (MainClass.replayHandler != null && !MainClass.isReplayReady)
                 Timing.KillCoroutines(MainClass.replayHandler);
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
@@ -202,21 +187,14 @@ namespace PlayerRecorder
 
         private void WaitingForPlayers()
         {
-            if (firstrun)
-            {
-                firstrun = false;
-                if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
-                    Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
-                if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
-                    Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
-            }
+            if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
+                Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
+            if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
+                Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
+
             if (MainClass.isReplayReady)
             {
-                Log.Debug("Start replay");
-                foreach (var itm in UnityEngine.Object.FindObjectsOfType<Pickup>())
-                {
-                    NetworkServer.Destroy(itm.gameObject);
-                }
+                Log.Debug("Start replay", MainClass.singleton.Config.debug);
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
                 MainClass.replayPickups.Clear();
@@ -230,21 +208,28 @@ namespace PlayerRecorder
                 MainClass.recordPickups.Clear();
                 MainClass.framer = 0;
                 core.StartRecording();
-                Log.Debug("New recorder instance created.");
+                Log.Debug("New recorder instance created.", MainClass.singleton.Config.debug);
                 MainClass.isRecording = true;
-                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Generator079>())
-                {
-                    gen.gameObject.AddComponent<GeneratorRecord>();
-                }
+
+                if (Map.Doors == null)
+                    Log.Error("Map.Doors is null!");
+
                 foreach (var door in Map.Doors)
-                {
-                    door.gameObject.AddComponent<DoorRecord>();
-                }
-                foreach(var lift in Map.Lifts)
-                {
+                    door.Base.gameObject.AddComponent<DoorRecord>();
+
+                if (Map.Lifts == null)
+                    Log.Error("Map.Lifts is null!");
+
+                foreach (var lift in Map.Lifts)
                     lift.gameObject.AddComponent<LiftRecord>();
-                }
-                AlphaWarheadController.Host.gameObject.AddComponent<WarheadRecord>();
+
+                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Scp079Generator>())
+                    gen.gameObject.AddComponent<GeneratorRecord>();
+
+                if (Warhead.Controller == null)
+                    Log.Error("Warhead.Controller is null!");
+
+                Warhead.Controller.gameObject.AddComponent<WarheadRecord>();
             }
         }
     }

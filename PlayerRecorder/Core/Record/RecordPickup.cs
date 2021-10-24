@@ -1,4 +1,6 @@
 ﻿using Exiled.API.Features;
+using Exiled.API.Features.Items;
+using InventorySystem.Items.Pickups;
 using PlayerRecorder.Structs;
 using System;
 using System.Collections.Generic;
@@ -16,13 +18,13 @@ namespace PlayerRecorder.Core.Record
         public Vector3 currentPosition = new Vector3(0f, 0f, 0f);
         public Quaternion currentRotation = new Quaternion(0f, 0f, 0f, 0f);
 
-        Pickup _pickup;
-        public Pickup pickup
+        ItemPickupBase _pickup;
+        public ItemPickupBase pickup
         {
             get
             {
                 if (_pickup == null)
-                    _pickup = GetComponent<Pickup>();
+                    _pickup = GetComponent<ItemPickupBase>();
                 return _pickup;
             }
         }
@@ -41,26 +43,26 @@ namespace PlayerRecorder.Core.Record
             RecordCore.OnReceiveEvent(new CreatePickupData()
             {
                 ItemID = uniqueId,
-                ItemType = (int)pickup.ItemId,
-                Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
-                Rotation = new QuaternionData() {  x= pickup.rotation.x, y=pickup.rotation.y, z=pickup.rotation.z,w=pickup.rotation.w}
+                ItemType = (int)pickup.Info.ItemId,
+                Position = new Vector3Data() { x = pickup.transform.position.x, y = pickup.transform.position.y, z = pickup.transform.position.z },
+                Rotation = new QuaternionData() {  x= pickup.transform.rotation.x, y=pickup.transform.rotation.y, z=pickup.transform.rotation.z,w=pickup.transform.rotation.w}
             });;
         }
 
         private void Update()
         {                           
-            if (!MainClass.isRecording || pickup?.ItemId == ItemType.None)
+            if (!MainClass.isRecording || pickup?.Info.ItemId == ItemType.None)
                 return;
-            if (currentPosition != transform.position || currentRotation != transform.rotation)
+            if (currentPosition != pickup.transform.position || currentRotation != pickup.transform.rotation)
             {
-                currentPosition = transform.position;
-                currentRotation = transform.rotation;
+                currentPosition = pickup.transform.position;
+                currentRotation = pickup.transform.rotation;
                 RecordCore.OnReceiveEvent(new UpdatePickupData()
                 {
                     ItemID = uniqueId,
-                    ItemType = (int)pickup.itemId,
-                    Position = new Vector3Data() { x = pickup.position.x, y = pickup.position.y, z = pickup.position.z },
-                    Rotation = new QuaternionData() { x = pickup.rotation.x, y = pickup.rotation.y, z = pickup.rotation.z, w = pickup.rotation.w }
+                    ItemType = (int)pickup.Info.ItemId,
+                    Position = new Vector3Data() { x = pickup.transform.position.x, y = pickup.transform.position.y, z = pickup.transform.position.z },
+                    Rotation = new QuaternionData() { x = pickup.transform.rotation.x, y = pickup.transform.rotation.y, z = pickup.transform.rotation.z, w = pickup.transform.rotation.w }
                 });
             }
         }
