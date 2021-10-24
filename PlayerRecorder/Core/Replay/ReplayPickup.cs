@@ -1,4 +1,5 @@
 ﻿using Exiled.API.Features.Items;
+using InventorySystem.Items.Pickups;
 using PlayerRecorder.Structs;
 using UnityEngine;
 
@@ -8,13 +9,13 @@ namespace PlayerRecorder.Core.Replay
     {
         public int uniqueId = 0;
 
-        Pickup _pickup;
-        public Pickup pickup
+        ItemPickupBase _pickup;
+        public ItemPickupBase pickup
         {
             get
             {
                 if (_pickup == null)
-                    _pickup = GetComponent<Pickup>();
+                    _pickup = GetComponent<ItemPickupBase>();
                 return _pickup;
             }
         }
@@ -23,10 +24,8 @@ namespace PlayerRecorder.Core.Replay
         {
             if (pickup == null || uniqueId == 0)
                 return;
-            pickup.Position = e.Position.vector;
-            pickup.Rotation = e.Rotation.quaternion;
-            //if (pickup.Type != (ItemType)e.ItemType)
-                //pickup.NetworkitemId = (ItemType)e.ItemType;
+            pickup.transform.position = e.Position.vector;
+            pickup.transform.rotation = e.Rotation.quaternion;
         }
 
         void OnDestroy()

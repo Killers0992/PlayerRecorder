@@ -4,10 +4,10 @@ using ProtoBuf;
 namespace PlayerRecorder.Structs
 {
     [ProtoContract]
-    public class OpenCloseGeneratorData : IEventType
+    public class GeneratorFlagsData : IEventType
     {
         [ProtoMember(1)]
-        public bool IsOpen { get; set; }
+        public byte Flags { get; set; }
         [ProtoMember(2)]
         public Vector3Data Position { get; set; }
     }

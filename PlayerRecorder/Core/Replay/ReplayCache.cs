@@ -1,4 +1,5 @@
 ﻿using Interactables.Interobjects.DoorUtils;
+using MapGeneration.Distributors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,13 +13,13 @@ namespace PlayerRecorder.Core.Replay
     {
         public static Dictionary<string, Lift> ElevatorCache { get; set; } = new Dictionary<string, Lift>();
         public static Dictionary<Vector3, DoorVariant> DoorCache { get; set; } = new Dictionary<Vector3, DoorVariant>();
-       // public static Dictionary<Vector3, Generator079> GeneratorCache { get; set; } = new Dictionary<Vector3, Generator079>();
+        public static Dictionary<Vector3, Scp079Generator> GeneratorCache { get; set; } = new Dictionary<Vector3, Scp079Generator>();
 
         public static void ClearCache()
         {
             ElevatorCache.Clear();
             DoorCache.Clear();
-            //GeneratorCache.Clear();
+            GeneratorCache.Clear();
         }
     }
 }

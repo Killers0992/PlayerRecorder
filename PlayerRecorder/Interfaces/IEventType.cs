@@ -19,14 +19,16 @@ namespace PlayerRecorder.Interfaces
     [ProtoInclude(13, typeof(UpdateRoleData))]
     [ProtoInclude(14, typeof(UpdateHoldingItem))]
     [ProtoInclude(15, typeof(CreateRagdollData))]
-    [ProtoInclude(16, typeof(GeneratorUpdateData))]
+    [ProtoInclude(16, typeof(GeneratorFlagsData))]
     [ProtoInclude(17, typeof(WarheadUpdateData))]
     [ProtoInclude(18, typeof(Change914KnobData))]
-    [ProtoInclude(19, typeof(OpenCloseGeneratorData))]
-    [ProtoInclude(20, typeof(UnlockGeneratorData))]
+    [ProtoInclude(19, typeof(GeneratorTimeData))]
+    //[ProtoInclude(20, typeof(UnlockGeneratorData))]
     [ProtoInclude(21, typeof(ScpTerminationData))]
     [ProtoInclude(22, typeof(PlaceDecalData))]
     [ProtoInclude(23, typeof(DoorDestroyData))]
+    [ProtoInclude(24, typeof(NukeOutsideKeycardEnteredData))]
+    [ProtoInclude(25, typeof(NukesiteSwitchData))]
     public interface IEventType
     {
     }

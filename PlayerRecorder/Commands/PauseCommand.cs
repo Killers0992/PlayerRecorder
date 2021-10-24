@@ -33,6 +33,11 @@ namespace PlayerRecorder.Commands
             if (MainClass.isReplaying)
             {
                 MainClass.isReplayPaused = !MainClass.isReplayPaused;
+                if (MainClass.isReplayPaused)
+                {
+                    if (Warhead.IsInProgress)
+                        MainClass.singleton.core2.lastDetonation = Warhead.DetonationTimer;
+                }
                 response = $"Replay {(MainClass.isReplayPaused ? "paused" : "unpaused")}.";
             }
             else

@@ -49,22 +49,9 @@ namespace PlayerRecorder.Core.Record
                 RecordCore.OnReceiveEvent(new UpdatePlayerData()
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
-                    MoveState = (byte)hub.animationController.Network_curMoveState,
-                    CurrentAnim = hub.animationController.NetworkcurAnim,
                     RoleID = (sbyte)hub.characterClassManager.NetworkCurClass,
-                    Speed = new Vector2Data() { x = hub.animationController.Networkspeed.x, y = hub.animationController.Networkspeed.y },
                     Position = new Vector3Data() { x = hub.transform.position.x, y = hub.transform.position.y, z = hub.transform.position.z },
                     Rotation = new Vector2Data() { x = hub.playerMovementSync.Rotations.x, y = hub.playerMovementSync.Rotations.y }
-                });
-            }
-
-            if (currentHoldingItem != hub.inventory.NetworkCurItem.TypeId)
-            {
-                currentHoldingItem = hub.inventory.NetworkCurItem.TypeId;
-                RecordCore.OnReceiveEvent(new UpdateHoldingItem()
-                {
-                    PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
-                    HoldingItem = (sbyte)hub.inventory.NetworkCurItem.TypeId
                 });
             }
 
@@ -75,6 +62,19 @@ namespace PlayerRecorder.Core.Record
                 {
                     PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
                     RoleID = (sbyte)currentRole
+                });
+            }
+
+            if (hub.inventory?.NetworkCurItem == null)
+                return;
+
+            if (currentHoldingItem != hub.inventory?.NetworkCurItem.TypeId)
+            {
+                currentHoldingItem = hub.inventory.NetworkCurItem.TypeId;
+                RecordCore.OnReceiveEvent(new UpdateHoldingItem()
+                {
+                    PlayerID = (sbyte)hub.queryProcessor.NetworkPlayerId,
+                    HoldingItem = (sbyte)hub.inventory.NetworkCurItem.TypeId
                 });
             }
         }

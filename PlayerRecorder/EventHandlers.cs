@@ -1,8 +1,8 @@
 ﻿using Exiled.API.Features;
 using Exiled.Events.EventArgs;
+using JesusQC_Npcs.Features;
+using MapGeneration.Distributors;
 using MEC;
-using Mirror;
-using NPCS;
 using PlayerRecorder.Core.Record;
 using PlayerRecorder.Core.Replay;
 using PlayerRecorder.Structs;
@@ -51,7 +51,7 @@ namespace PlayerRecorder
 
         private void Player_Spawning(SpawningEventArgs ev)
         {
-            if (ev.Player.IsNPC())
+            if (Dummy.Dictionary.ContainsKey(ev.Player.GameObject))
                 return;
             if (MainClass.isReplayReady && MainClass.bringSpectatorToTarget != -1)
             {
@@ -99,6 +99,7 @@ namespace PlayerRecorder
         {
             if (!MainClass.isRecording)
                 return;
+
             RecordCore.OnReceiveEvent(new ScpTerminationData()
             {
                 RoleFullName = ev.Role.fullName,
@@ -109,7 +110,7 @@ namespace PlayerRecorder
 
         private void Player_Verified(VerifiedEventArgs ev)
         {
-            if (ev.Player.IsNPC())
+            if (Dummy.Dictionary.ContainsKey(ev.Player.GameObject))
                 return;
             if (MainClass.isReplayReady)
             {
@@ -175,7 +176,7 @@ namespace PlayerRecorder
             MainClass.isRecording = false;
             Timing.RunCoroutine(RecordCore.Process(MainClass.currentRoundID, MainClass.RoundTimestamp));
             MainClass.currentRoundID++;
-            Log.Debug($"Round restart with new round id: {MainClass.currentRoundID}");
+            Log.Debug($"Round restart with new round id: {MainClass.currentRoundID}", MainClass.singleton.Config.debug);
             if (MainClass.replayHandler != null && !MainClass.isReplayReady)
                 Timing.KillCoroutines(MainClass.replayHandler);
             if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
@@ -186,17 +187,14 @@ namespace PlayerRecorder
 
         private void WaitingForPlayers()
         {
-            if (firstrun)
-            {
-                firstrun = false;
-                if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
-                    Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
-                if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
-                    Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
-            }
+            if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData")))
+                Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData"));
+            if (!Directory.Exists(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString())))
+                Directory.CreateDirectory(Path.Combine(MainClass.pluginDir, "RecorderData", Server.Port.ToString()));
+
             if (MainClass.isReplayReady)
             {
-                Log.Debug("Start replay");
+                Log.Debug("Start replay", MainClass.singleton.Config.debug);
                 RoundSummary.RoundLock = true;
                 CharacterClassManager.ForceRoundStart();
                 MainClass.replayPickups.Clear();
@@ -210,18 +208,28 @@ namespace PlayerRecorder
                 MainClass.recordPickups.Clear();
                 MainClass.framer = 0;
                 core.StartRecording();
-                Log.Debug("New recorder instance created.");
+                Log.Debug("New recorder instance created.", MainClass.singleton.Config.debug);
                 MainClass.isRecording = true;
 
+                if (Map.Doors == null)
+                    Log.Error("Map.Doors is null!");
+
                 foreach (var door in Map.Doors)
-                {
                     door.Base.gameObject.AddComponent<DoorRecord>();
-                }
-                foreach(var lift in Map.Lifts)
-                {
+
+                if (Map.Lifts == null)
+                    Log.Error("Map.Lifts is null!");
+
+                foreach (var lift in Map.Lifts)
                     lift.gameObject.AddComponent<LiftRecord>();
-                }
-                AlphaWarheadController.Host.gameObject.AddComponent<WarheadRecord>();
+
+                foreach (var gen in UnityEngine.Object.FindObjectsOfType<Scp079Generator>())
+                    gen.gameObject.AddComponent<GeneratorRecord>();
+
+                if (Warhead.Controller == null)
+                    Log.Error("Warhead.Controller is null!");
+
+                Warhead.Controller.gameObject.AddComponent<WarheadRecord>();
             }
         }
     }

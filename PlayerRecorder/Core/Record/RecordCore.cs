@@ -35,42 +35,18 @@ namespace PlayerRecorder.Core.Record
             }
         }
 
-        private CoroutineHandle pickupsCoroutine, frameCoroutine;
+        private CoroutineHandle frameCoroutine;
 
         void Awake()
         {
             singleton = this;
-            pickupsCoroutine = Timing.RunCoroutine(PickupsWatcher());
             frameCoroutine = Timing.RunCoroutine(FrameRecord());
         }
 
         private void OnDestroy()
         {
-            if (pickupsCoroutine != null)
-                Timing.KillCoroutines(pickupsCoroutine);
             if (frameCoroutine != null)
                 Timing.KillCoroutines(frameCoroutine);
-        }
-
-        public IEnumerator<float> PickupsWatcher()
-        {
-            while (true)
-            {
-                if (!MainClass.isRecording)
-                    continue;
-                try
-                {
-                    foreach (var item in Map.Pickups)
-                    {
-                        if (!item.Base.gameObject.TryGetComponent<RecordPickup>(out _))
-                        {
-                            item.Base.gameObject.AddComponent<RecordPickup>();
-                        }
-                    }
-                }
-                catch (Exception) { }
-                yield return Timing.WaitForSeconds(0.1f);
-            }
         }
 
         public static TimeSpan GetTimeFromFrames(int frames)
