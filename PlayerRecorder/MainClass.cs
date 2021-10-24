@@ -14,8 +14,8 @@ namespace PlayerRecorder
         public override string Author { get; } = "Killers0992";
         public override string Name { get; } = "PlayerRecorder";
         public override string Prefix { get; } = "playerrecorder";
-        public override Version Version { get; } = new Version(1, 0, 1);
-        public override Version RequiredExiledVersion { get; } = new Version(2,11,0);
+        public override Version Version { get; } = new Version(1, 0, 2);
+        public override Version RequiredExiledVersion { get; } = new Version(3,0,0);
 
         public RecordCore core;
         public ReplayCore core2;
